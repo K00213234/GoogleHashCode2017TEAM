@@ -16,56 +16,57 @@ namespace GHC.VideoServer
             parser.filename = filepath;
             parser.Parse();
 
-            var context = parser.context;
+			Context  context = parser.context;
+			context.MakeCacheServers();
+			context.LoadServers();
+			Solution s = new Solution();
+			s.context = context;
+			String output= s.ToString();
 
-            //foreach(var request in context.VideoREquestList)
-            //{
-            //    var t = context.Videos.Find(x => x.VideoID == request.VideoID);
-            //    request.Video = t;
-            //}
-
-
-            PrintContext(parser.context);         
+            //PrintContext(parser.context);         
 			Console.Read();
 		}
-        private static void PrintContext(Context context)
-        {
+		//private static void PrintContext(Context context)
+		//{
 
-            foreach (var endpoint in context.EndPointList)
-            {
-                Console.WriteLine($"Endpoint: {endpoint.EndPointID} - {endpoint.LatencyInMiliSecondsFromDataCenter}");
-                foreach (var connection in endpoint.Connections)
-                {
-                    Console.WriteLine($"    connection {connection.CacheServerID} - {connection.LatencyInMilliSecondsFromCacheToEndpoint}");
-                }
-            }
+		//	foreach (var endpoint in context.EndPointList)
+		//	{
+		//		Console.WriteLine($"Endpoint: {endpoint.EndPointID} - {endpoint.LatencyInMiliSecondsFromDataCenter}");
+		//		foreach (var connection in endpoint.Connections)
+		//		{
+		//			Console.WriteLine($"    connection {connection.CacheServerID} - {connection.LatencyInMilliSecondsFromCacheToEndpoint}");
+		//		}
+		//	}
 
-            foreach (var request in context.RequestDescriptionList)
-            {
-                Console.WriteLine($"video {request.VideoID} - {request.NumberOfReqeusts} - {request.EndPointID} - {request.Video} - {request.EndPoint.EndPointID}");
-            }
-        }     
-    }  
+
+		//	foreach (var request in context.RequestDescriptionList)
+		//	{
+		//		Console.WriteLine($"video {request.VideoID} - {request.NumberOfReqeusts} - {request.EndPointID}");
+		//	}
+		//}
+
+     
+    }
 }
 
 
-public class FirstComeFirstServe
-{
-    private Context _context;    
+//public class FirstComeFirstServe
+//{
+//	private Context _context;    
 
-    public FirstComeFirstServe(Context context)
-    {
-        _context = context;
-    }
+//	public FirstComeFirstServe(Context context)
+//	{
+//		_context = context;
+//	}
 
-    public void Process()
-    {
+//	public void Process()
+//	{
 
-    }
+//	}
 
-    private void SortRequests()
-    {
-        _context.RequestDescriptionList.OrderBy(x => x.NumberOfReqeusts);
-    }
+//	private void SortRequests()
+//	{
+//		_context.RequestDescriptionList.OrderBy(x => x.NumberOfReqeusts)
+//	}
 
-}
+//}

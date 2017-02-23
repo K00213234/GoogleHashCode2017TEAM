@@ -43,6 +43,28 @@ namespace GHC.VideoServer
 
 		}
 		public List<VideoRequest> VideoRequestList = new List<VideoRequest>();
+
+		public void MakeCacheServers()
+		{
+			for(int i = 0; i < this.FileDescriptor.CacheServersCount; i++)
+			{
+				CacheServer cacheServer = new CacheServer();
+				cacheServer.ID = i;
+				this.CacheServerList.Add(cacheServer);
+			}
+		}
+		public void LoadServers()
+		{
+			this.CalcVideoRequests();
+
+			List<VideoRequest> videolist = this.SortByFrequencyDescending();
+			foreach(CacheServer item in this.CacheServerList)
+			{
+				item.VideoList.AddRange(videolist);
+			}
+
+		}
+		public List<CacheServer> CacheServerList = new List<CacheServer>();
 	}
 	public class VideoRequest
 	{
@@ -53,15 +75,16 @@ namespace GHC.VideoServer
 
 	public class Solution
 	{
-		public List<CacheServer> CacheServerList = new List<CacheServer>();
+		public Context context { get; set; }
+
 
 		public override String ToString()
 		{
-			String output = this.CacheServerList.Count + Environment.NewLine;
-			foreach(CacheServer item in this.CacheServerList)
+			String output = this.context.CacheServerList.Count + Environment.NewLine;
+			foreach(CacheServer item in this.context.CacheServerList)
 			{
 				output += item.ID;
-				for(int index = 0; index <= item.VideoList.Count; index++)
+				for(int index = 0; index < item.VideoList.Count; index++)
 				{
 					output += " " + item.VideoList[index].VideoID;
 				}
@@ -69,10 +92,11 @@ namespace GHC.VideoServer
 			}
 			return output;
 		}
+
 	}
 	public class CacheServer
 	{
 		public int ID { get; set; }
-		public List<Video> VideoList = new List<Video>();
+		public List<VideoRequest> VideoList = new List<VideoRequest>();
 	}
 }
