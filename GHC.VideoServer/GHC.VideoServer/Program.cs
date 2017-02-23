@@ -17,7 +17,7 @@ namespace GHC.VideoServer
 			MainFile("trending_today");
 
 			MainFile("kittens");
-			Console.Read();
+			
 		}
 		static void MainFile(string filename)
 		{
@@ -29,21 +29,89 @@ namespace GHC.VideoServer
 
 			Context  context = parser.context;
 			context.MakeCacheServers();
-			//context.LoadServers();
-            FirstComeFirstServed(context);            
+            //context.LoadServers();
+            NonDuplicateMostRequestVideosFirst(context);            
             Solution s = new Solution();
 			s.context = context;
-
+            string output = s.ToString();
 			CreateFile(output, filepath + ".out");
-            //PrintContext(parser.context);         
-			Console.Read();
-
+            //PrintContext(parser.context); 
+              			
+            Console.WriteLine("really done");
             //context.CacheServerList
 
-         
-		}
 
-		public static void CreateFile(String text, String filePath)
+        }
+
+        private static void NonDuplicateMostRequestVideosFirst(Context context)
+        {
+            foreach (var request in context.RequestDescriptionList.OrderByDescending(x => x.NumberOfReqeusts))
+            {
+                foreach (var connection in request.EndPoint.Connections.OrderBy(x => x.LatencyInMilliSecondsFromCacheToEndpoint))
+                {
+                    var cacheServer = context.CacheServerList.Find(x => x.ID == connection.CacheServerID);
+
+                    if (cacheServer.ConsumedSpace() < request.Video.VideoSizeInMB)
+                    {
+                        if(cacheServer.VideoList.Any(x => x.VideoID == request.VideoID))
+                        {
+                            //already on this server
+                            continue;
+                        }
+                        cacheServer.VideoList.Add(new VideoRequest
+                        { //good lord
+                            Video = request.Video,
+                            VideoID = request.VideoID
+                        });
+                    }
+                }
+            }
+        }
+
+
+        private static void MostRequestVideosFirst(Context context)
+        {
+            foreach (var request in context.RequestDescriptionList.OrderByDescending(x => x.NumberOfReqeusts))
+            {
+                foreach (var connection in request.EndPoint.Connections.OrderBy(x => x.LatencyInMilliSecondsFromCacheToEndpoint))
+                {
+                    var cacheServer = context.CacheServerList.Find(x => x.ID == connection.CacheServerID);
+
+                    if (cacheServer.ConsumedSpace() < request.Video.VideoSizeInMB)
+                    {
+                        cacheServer.VideoList.Add(new VideoRequest
+                        { //good lord
+                            Video = request.Video,
+                            VideoID = request.VideoID
+                        });
+                    }
+                }
+            }
+        }
+
+
+
+        private static void FirstComeFirstServed(Context context)
+        {
+            foreach (var request in context.RequestDescriptionList)
+            {
+                foreach (var connection in request.EndPoint.Connections.OrderBy(x => x.LatencyInMilliSecondsFromCacheToEndpoint))
+                {
+                    var cacheServer = context.CacheServerList.Find(x => x.ID == connection.CacheServerID);
+
+                    if (cacheServer.ConsumedSpace() < request.Video.VideoSizeInMB)
+                    {
+                        cacheServer.VideoList.Add(new VideoRequest
+                        { //good lord
+                            Video = request.Video,
+                            VideoID = request.VideoID
+                        });
+                    }
+                }
+            }
+        }
+
+        public static void CreateFile(String text, String filePath)
 		{
 			//
 			//	Step 1A; Delete Existing File
