@@ -6,11 +6,18 @@ using System.Text;
 
 namespace GHC.VideoServer
 {
+
+    public class Context
+    {
+       public  List<Video> Videos = new List<Video>();
+        public List<EndPoint> EndPointList = new List<EndPoint>();
+        public List<RequestDescription> RequestDescriptionList = new List<RequestDescription>();
+        public FileDescriptor FileDescriptor { get; set; }
+    }
+
     public class TrafficParser
     {
-        List<Video> Videos = new List<Video>();
-        List<EndPoint> EndPointList = new List<EndPoint>();
-        List<RequestDescription> RequestDescriptionList = new List<RequestDescription>();
+        public Context context = new Context();
         public FileDescriptor FileDescriptor { get; set; }
 
         public String filename;
@@ -18,9 +25,7 @@ namespace GHC.VideoServer
         public void Parse()
         {
             String text = ReadAllFile(this.filename);
-            this.Parsetext(text);
-
-
+            this.Parsetext(text);          
         }
         public void Parsetext(String text)
         {
@@ -41,15 +46,14 @@ namespace GHC.VideoServer
                     endPoint.Connections.Add(connectedCacheServer);
                     connectedCacheServer.EndPoint = endPoint;
                 }
-                EndPointList.Add(endPoint);
+                context .EndPointList.Add(endPoint);
             }
-
 
             for (int requestIndex = 0; requestIndex < this.FileDescriptor.RequestDescriptorCount; requestIndex++)
             {
                 String[] parts = lines[lineNumber].Split(new String[] { " " }, StringSplitOptions.RemoveEmptyEntries);
 
-                RequestDescriptionList.Add(new RequestDescription
+                context .RequestDescriptionList.Add(new RequestDescription
                 {
                     VideoID = int.Parse(parts[0]),
                     EndPointID = int.Parse(parts[1]),
@@ -84,19 +88,12 @@ namespace GHC.VideoServer
 
         }
 
-        //public RequestDescription ParseRequest(string line)
-        //{
-        //    var result = new RequestDescription
-        //    {
-        //        I
-        //    }
-        //}
         public void ParseAndSetVideoList(string line)
         {
             String[] parts = line.Split(new String[] { " " }, StringSplitOptions.RemoveEmptyEntries);
             for (int columnIndex = 0; columnIndex < parts.Length; columnIndex++)
             {
-                this.Videos.Add(new VideoServer.Video
+                context.Videos.Add(new VideoServer.Video
                 {
                     VideoID = columnIndex,
                     VideoSizeInMB = int.Parse(parts[columnIndex])
@@ -115,14 +112,7 @@ namespace GHC.VideoServer
             };
 
             return result;
-        }
-        //public void ParseRow(int rowIndex, string line)
-        //{
-        //    for (int columnIndex = 0; columnIndex < this.endpointCount; columnIndex++)
-        //    {
-        //        this.array[rowIndex, columnIndex] = line[columnIndex] == TrafficParser.Tatmato ? 1 : 0;
-        //    }
-        //}
+        }      
         public static String ReadAllFile(String filename)
         {
             String text = String.Empty;
@@ -132,24 +122,6 @@ namespace GHC.VideoServer
             streamReader.Close();
 
             return text;
-        }
-        //public String PrintPizza()
-        //{
-        //    string output = string.Empty;
-        //    for (int row = 0; row < this.videoCount; row++)
-        //    {
-        //        for (int column = 0; column < this.endpointCount; column++)
-        //        {
-        //            output += array[row, column] == 1 ? TrafficParser.Tatmato : TrafficParser.Mushroom;
-        //        }
-        //        output += Environment.NewLine;
-        //    }
-        //    return output;
-
-        //}
-
-        public static char Mushroom = 'M';
-        public static char Tatmato = 'T';
-
+        }     
     }
 }//git
