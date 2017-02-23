@@ -24,7 +24,7 @@ namespace GHC.VideoServer
 
 		public List<VideoRequest> SortByFrequencyDescending()
 		{
-			var result = this.VideoREquestList.OrderByDescending(x => x.RequestTotal);
+			var result = this.VideoRequestList.OrderByDescending(x => x.RequestTotal);
             return result.ToList();
 		}
 
