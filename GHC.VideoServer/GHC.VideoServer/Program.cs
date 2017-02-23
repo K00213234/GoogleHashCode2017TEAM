@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GHC.VideoServer;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -15,8 +16,52 @@ namespace GHC.VideoServer
             parser.filename = filepath;
             parser.Parse();
 
-            Console.WriteLine(parser.context.ToString());
+            PrintContext(parser.context);         
 			Console.Read();
 		}
-	}
+        private static void PrintContext(Context context)
+        {
+
+            foreach (var endpoint in context.EndPointList)
+            {
+                Console.WriteLine($"Endpoint: {endpoint.EndPointID} - {endpoint.LatencyInMiliSecondsFromDataCenter}");
+                foreach (var connection in endpoint.Connections)
+                {
+                    Console.WriteLine($"    connection {connection.CacheServerID} - {connection.LatencyInMilliSecondsFromCacheToEndpoint}");
+                }
+            }
+
+
+            foreach (var request in context.RequestDescriptionList)
+            {
+                Console.WriteLine($"video {request.VideoID} - {request.NumberOfReqeusts} - {request.EndPointID}");
+            }
+        }
+
+     
+    }
+
+  
+}
+
+
+public class FirstComeFirstServe
+{
+    private Context _context;    
+
+    public FirstComeFirstServe(Context context)
+    {
+        _context = context;
+    }
+
+    public void Process()
+    {
+
+    }
+
+    private void SortRequests()
+    {
+        _context.RequestDescriptionList.OrderBy(x => x.NumberOfReqeusts)
+    }
+
 }

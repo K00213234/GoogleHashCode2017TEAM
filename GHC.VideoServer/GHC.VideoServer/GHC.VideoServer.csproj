@@ -47,6 +47,7 @@
     <Compile Include="EndPoint.cs" />
     <Compile Include="EndPointToCacheServerConnection.cs" />
     <Compile Include="FileDescriptor.cs" />
+    <Compile Include="Mapper.cs" />
     <Compile Include="RequestDescription.cs" />
     <Compile Include="TrafficParser.cs" />
     <Compile Include="Program.cs" />

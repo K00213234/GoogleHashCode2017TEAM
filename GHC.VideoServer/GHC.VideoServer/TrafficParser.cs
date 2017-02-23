@@ -38,6 +38,7 @@ namespace GHC.VideoServer
             for (int endPointIndex = 0; endPointIndex < this.FileDescriptor.EndpointCount; endPointIndex++)
             {
                 EndPoint endPoint = ParseEndPoint(lines[lineNumber]);
+                endPoint.EndPointID = endPointIndex;
                 lineNumber++;
                 for (int i = 0; i < endPoint.NumberOfConnectedCacheServers; i++, lineNumber++)
                 {
@@ -105,8 +106,7 @@ namespace GHC.VideoServer
             String[] parts = line.Split(new String[] { " " }, 2, StringSplitOptions.RemoveEmptyEntries);
 
             var result = new EndPoint
-            {
-                EndPointID = 0,
+            {                
                 LatencyInMiliSecondsFromDataCenter = int.Parse(parts[0]),
                 NumberOfConnectedCacheServers = int.Parse(parts[1])
             };
