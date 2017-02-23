@@ -14,16 +14,20 @@ namespace GHC.VideoServer
         public int RequestDescriptors { get; set; }
         public int CacheServersCount { get; set; }
         public int CacheServersCapacityMB { get; set; }
+    }
 
+    public class Video
+    {
+        public int VideoID { get; set; }
+
+        public int VideoSizeInMB { get; set; }
     }
 
     public class EndPointToCacheServerConnection
     {
         public int CacheServerID { get; set; }
         public int LatencyInMilliSecondsFromCacheToEndpoint { get; set; }
-
-        public EndPoint EndPoint { get; set; }
-        
+        public EndPoint EndPoint { get; set; }        
     }
 
     public class EndPoint
@@ -36,10 +40,21 @@ namespace GHC.VideoServer
         public List<EndPointToCacheServerConnection> connections = new List<EndPointToCacheServerConnection>();
 
     }
+
+
+    public class RequestDescription
+    {
+        //public int 
+        public int RequestDescriptionID { get; set; }
+        public int RequestEndPointIDOrigin { get; set; }
+
+        public int NumberOfRequests { get; set; }
+    }
     public class TrafficParser
     {
         public int[,] array;
         int[] videoArray;
+        List<Video> Videos = new List<Video>();
         EndPoint[] endPointArray;
         //public int videoCount;
         //public int endpointCount;
@@ -106,6 +121,14 @@ namespace GHC.VideoServer
                 CacheServersCapacityMB = int.Parse(parts[4]),
             };
 
+        }
+
+        public RequestDescription ParseRequest(string line)
+        {
+            var result = new RequestDescription
+            {
+                I
+            }
         }
         public void ParseVideoLine(string line)
         {
