@@ -30,7 +30,7 @@ namespace GHC.VideoServer
 
 		public void AddToList(int videoId, int request)
 		{
-			foreach(VideoRequest item in this.VideoREquestList)
+			foreach(VideoRequest item in this.VideoRequestList)
 			{
 				if(item.VideoID == videoId)
 				{
@@ -39,10 +39,10 @@ namespace GHC.VideoServer
 				}
 			}
 			VideoRequest newitem = new VideoRequest{VideoID=videoId, RequestTotal=request};
-			this.VideoREquestList.Add(newitem);
+			this.VideoRequestList.Add(newitem);
 
 		}
-		public List<VideoRequest> VideoREquestList = new List<VideoRequest>();
+		public List<VideoRequest> VideoRequestList = new List<VideoRequest>();
 	}
 	public class VideoRequest
 	{
