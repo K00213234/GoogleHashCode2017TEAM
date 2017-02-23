@@ -10,7 +10,6 @@ namespace GHC.VideoServer
     public class TrafficParser
     {
         public Context context = new Context();
-        public FileDescriptor FileDescriptor { get; set; }
 
         public String filename;
 
@@ -27,7 +26,7 @@ namespace GHC.VideoServer
             int lineNumber = 1;
             this.ParseAndSetVideoList(lines[lineNumber]);
             lineNumber++;
-            for (int endPointIndex = 0; endPointIndex < this.FileDescriptor.EndpointCount; endPointIndex++)
+			for(int endPointIndex = 0; endPointIndex < this.context.FileDescriptor.EndpointCount; endPointIndex++)
             {
                 EndPoint endPoint = ParseEndPoint(lines[lineNumber]);
                 endPoint.EndPointID = endPointIndex;
@@ -42,7 +41,7 @@ namespace GHC.VideoServer
                 context .EndPointList.Add(endPoint);
             }
 
-            for (int requestIndex = 0; requestIndex < this.FileDescriptor.RequestDescriptorCount; requestIndex++)
+			for(int requestIndex = 0; requestIndex < this.context.FileDescriptor.RequestDescriptorCount; requestIndex++)
             {
                 String[] parts = lines[lineNumber].Split(new String[] { " " }, StringSplitOptions.RemoveEmptyEntries);
 
@@ -70,7 +69,7 @@ namespace GHC.VideoServer
         {
             String[] parts = line.Split(new String[] { " " }, StringSplitOptions.RemoveEmptyEntries);
 
-            this.FileDescriptor = new FileDescriptor
+			this.context.FileDescriptor = new FileDescriptor
             {
                 VideoCount = int.Parse(parts[0]),
                 EndpointCount = int.Parse(parts[1]),
