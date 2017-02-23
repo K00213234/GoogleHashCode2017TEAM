@@ -11,9 +11,10 @@ namespace GHC.VideoServer
 	{
 		static void Main(string[] args)
 		{
+			string filename="me_at_the_zoo";
 			TrafficParser parser = new TrafficParser();
-            string filepath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "me_at_the_zoo.in"); ;
-            parser.filename = filepath;
+            string filepath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, filename);
+            parser.filename = filepath+".in";
             parser.Parse();
 
 			Context  context = parser.context;
@@ -23,8 +24,35 @@ namespace GHC.VideoServer
 			s.context = context;
 			String output= s.ToString();
 
+			CreateFile(output, filepath + ".out");
             //PrintContext(parser.context);         
 			Console.Read();
+		}
+
+		public static void CreateFile(String text, String filePath)
+		{
+			//
+			//	Step 1A; Delete Existing File
+			//
+			if(File.Exists(filePath))
+				File.Delete(filePath);
+			else
+			{
+				//
+				//	Step 1B; Create Directory
+				//
+				String directoryPath = Path.GetDirectoryName(filePath);
+				if(!Directory.Exists(directoryPath))
+					Directory.CreateDirectory(directoryPath);
+			}
+			//
+			//	Step 2; Write File
+			//
+			using(StreamWriter streamWriter = File.CreateText(filePath))
+			{
+
+				streamWriter.Write(text);
+			}
 		}
 		//private static void PrintContext(Context context)
 		//{
@@ -45,8 +73,8 @@ namespace GHC.VideoServer
 		//	}
 		//}
 
-     
-    }
+
+	}
 }
 
 
