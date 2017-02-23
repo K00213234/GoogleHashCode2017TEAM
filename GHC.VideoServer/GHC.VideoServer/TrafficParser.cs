@@ -7,14 +7,6 @@ using System.Text;
 namespace GHC.VideoServer
 {
 
-    public class Context
-    {
-       public  List<Video> Videos = new List<Video>();
-        public List<EndPoint> EndPointList = new List<EndPoint>();
-        public List<RequestDescription> RequestDescriptionList = new List<RequestDescription>();
-        public FileDescriptor FileDescriptor { get; set; }
-    }
-
     public class TrafficParser
     {
         public Context context = new Context();
