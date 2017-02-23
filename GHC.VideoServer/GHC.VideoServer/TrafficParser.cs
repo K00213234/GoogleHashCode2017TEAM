@@ -7,49 +7,7 @@ using System.Text;
 namespace GHC.VideoServer
 {
 
-    public class FileDescriptor
-    {
-        public int VideoCount { get; set; }
-        public int EndpointCount { get; set; }
-        public int RequestDescriptors { get; set; }
-        public int CacheServersCount { get; set; }
-        public int CacheServersCapacityMB { get; set; }
-    }
 
-    public class Video
-    {
-        public int VideoID { get; set; }
-
-        public int VideoSizeInMB { get; set; }
-    }
-
-    public class EndPointToCacheServerConnection
-    {
-        public int CacheServerID { get; set; }
-        public int LatencyInMilliSecondsFromCacheToEndpoint { get; set; }
-        public EndPoint EndPoint { get; set; }        
-    }
-
-    public class EndPoint
-    {
-        public int EndPointID { get; set; }
-        public int LatencyInMiliSecondsFromDataCenter { get; set; }
-        public int NumberOfConnectedCacheServers { get; set; }
-
-        public List<EndPointToCacheServerConnection> Connections { get { return this.connections; } }
-        public List<EndPointToCacheServerConnection> connections = new List<EndPointToCacheServerConnection>();
-
-    }
-
-
-    public class RequestDescription
-    {
-        //public int 
-        public int RequestDescriptionID { get; set; }
-        public int RequestEndPointIDOrigin { get; set; }
-
-        public int NumberOfRequests { get; set; }
-    }
     public class TrafficParser
     {
         public int[,] array;
@@ -125,10 +83,11 @@ namespace GHC.VideoServer
 
         public RequestDescription ParseRequest(string line)
         {
-            var result = new RequestDescription
-            {
-                I
-            }
+			return null;
+			//var result = new RequestDescription
+			//{
+			//	//I
+			//}
         }
         public void ParseVideoLine(string line)
         {
