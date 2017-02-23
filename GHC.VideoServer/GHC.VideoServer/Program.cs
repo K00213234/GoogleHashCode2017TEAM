@@ -11,9 +11,20 @@ namespace GHC.VideoServer
 	{
 		static void Main(string[] args)
 		{
+			
+			MainFile("me_at_the_zoo");
+			MainFile("videos_worth_spreading");
+			MainFile("trending_today");
+
+			MainFile("kittens");
+			Console.Read();
+		}
+		static void MainFile(string filename)
+		{
+			
 			TrafficParser parser = new TrafficParser();
-            string filepath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "me_at_the_zoo.in"); ;
-            parser.filename = filepath;
+            string filepath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, filename);
+            parser.filename = filepath+".in";
             parser.Parse();
 
 			Context  context = parser.context;
@@ -23,9 +34,7 @@ namespace GHC.VideoServer
             Solution s = new Solution();
 			s.context = context;
 
-            
-			String output= s.ToString();
-            Console.WriteLine(output);
+			CreateFile(output, filepath + ".out");
             //PrintContext(parser.context);         
 			Console.Read();
 
@@ -34,27 +43,31 @@ namespace GHC.VideoServer
          
 		}
 
+		public static void CreateFile(String text, String filePath)
+		{
+			//
+			//	Step 1A; Delete Existing File
+			//
+			if(File.Exists(filePath))
+				File.Delete(filePath);
+			else
+			{
+				//
+				//	Step 1B; Create Directory
+				//
+				String directoryPath = Path.GetDirectoryName(filePath);
+				if(!Directory.Exists(directoryPath))
+					Directory.CreateDirectory(directoryPath);
+			}
+			//
+			//	Step 2; Write File
+			//
+			using(StreamWriter streamWriter = File.CreateText(filePath))
+			{
 
-        private static void FirstComeFirstServed(Context context)
-        {
-            foreach (var request in context.RequestDescriptionList)
-            {
-                foreach (var connection in request.EndPoint.Connections.OrderBy(x => x.LatencyInMilliSecondsFromCacheToEndpoint))
-                {
-                    var cacheServer = context.CacheServerList.Find(x => x.ID == connection.CacheServerID);
-
-                    if (cacheServer.ConsumedSpace() < request.Video.VideoSizeInMB)
-                    {
-                        cacheServer.VideoList.Add(new VideoRequest
-                        { //good lord
-                            Video = request.Video,
-                            VideoID = request.VideoID
-                        });
-                    }
-                }
-            }
-        }
-
+				streamWriter.Write(text);
+			}
+		}
 		//private static void PrintContext(Context context)
 		//{
 
@@ -74,8 +87,8 @@ namespace GHC.VideoServer
 		//	}
 		//}
 
-     
-    }
+
+	}
 }
 
 
