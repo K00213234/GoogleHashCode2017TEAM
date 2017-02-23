@@ -18,14 +18,43 @@ namespace GHC.VideoServer
 
 			Context  context = parser.context;
 			context.MakeCacheServers();
-			context.LoadServers();
-			Solution s = new Solution();
+			//context.LoadServers();
+            FirstComeFirstServed(context);            
+            Solution s = new Solution();
 			s.context = context;
-			String output= s.ToString();
 
+            
+			String output= s.ToString();
+            Console.WriteLine(output);
             //PrintContext(parser.context);         
 			Console.Read();
+
+            //context.CacheServerList
+
+         
 		}
+
+
+        private static void FirstComeFirstServed(Context context)
+        {
+            foreach (var request in context.RequestDescriptionList)
+            {
+                foreach (var connection in request.EndPoint.Connections.OrderBy(x => x.LatencyInMilliSecondsFromCacheToEndpoint))
+                {
+                    var cacheServer = context.CacheServerList.Find(x => x.ID == connection.CacheServerID);
+
+                    if (cacheServer.ConsumedSpace() < request.Video.VideoSizeInMB)
+                    {
+                        cacheServer.VideoList.Add(new VideoRequest
+                        { //good lord
+                            Video = request.Video,
+                            VideoID = request.VideoID
+                        });
+                    }
+                }
+            }
+        }
+
 		//private static void PrintContext(Context context)
 		//{
 

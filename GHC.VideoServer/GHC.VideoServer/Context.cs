@@ -12,7 +12,6 @@ namespace GHC.VideoServer
 		public List<EndPoint> EndPointList = new List<EndPoint>();
 		public List<RequestDescription> RequestDescriptionList = new List<RequestDescription>();
 		public FileDescriptor FileDescriptor { get; set; }
-
 		public void CalcVideoRequests()
 		{
             foreach (RequestDescription item in this.RequestDescriptionList)
@@ -50,9 +49,12 @@ namespace GHC.VideoServer
 			{
 				CacheServer cacheServer = new CacheServer();
 				cacheServer.ID = i;
+                cacheServer.MaxMB = FileDescriptor.CacheServersCapacityMB;               
 				this.CacheServerList.Add(cacheServer);
 			}
 		}
+        
+
 		public void LoadServers()
 		{
 			this.CalcVideoRequests();
@@ -98,5 +100,17 @@ namespace GHC.VideoServer
 	{
 		public int ID { get; set; }
 		public List<VideoRequest> VideoList = new List<VideoRequest>();
+        public int MaxMB { get; set; }
+
+        public int ConsumedSpace()
+        {
+            int sum = 0;
+            foreach(var video in VideoList)
+            {
+                sum += video.Video.VideoSizeInMB;
+            }
+
+            return sum;
+        }
 	}
 }
