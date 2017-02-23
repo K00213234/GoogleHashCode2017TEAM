@@ -16,6 +16,15 @@ namespace GHC.VideoServer
             parser.filename = filepath;
             parser.Parse();
 
+            var context = parser.context;
+
+            //foreach(var request in context.VideoREquestList)
+            //{
+            //    var t = context.Videos.Find(x => x.VideoID == request.VideoID);
+            //    request.Video = t;
+            //}
+
+
             PrintContext(parser.context);         
 			Console.Read();
 		}
@@ -31,17 +40,12 @@ namespace GHC.VideoServer
                 }
             }
 
-
             foreach (var request in context.RequestDescriptionList)
             {
-                Console.WriteLine($"video {request.VideoID} - {request.NumberOfReqeusts} - {request.EndPointID}");
+                Console.WriteLine($"video {request.VideoID} - {request.NumberOfReqeusts} - {request.EndPointID} - {request.Video} - {request.EndPoint.EndPointID}");
             }
-        }
-
-     
-    }
-
-  
+        }     
+    }  
 }
 
 
@@ -61,7 +65,7 @@ public class FirstComeFirstServe
 
     private void SortRequests()
     {
-        _context.RequestDescriptionList.OrderBy(x => x.NumberOfReqeusts)
+        _context.RequestDescriptionList.OrderBy(x => x.NumberOfReqeusts);
     }
 
 }
