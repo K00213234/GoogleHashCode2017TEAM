@@ -8,27 +8,24 @@ namespace GHC.VideoServer
 {
 	public class Context
 	{
-		public  List<Video> Videos = new List<Video>();
+		public List<Video> Videos = new List<Video>();
 		public List<EndPoint> EndPointList = new List<EndPoint>();
 		public List<RequestDescription> RequestDescriptionList = new List<RequestDescription>();
 		public FileDescriptor FileDescriptor { get; set; }
 
 		public void CalcVideoRequests()
 		{
-		
-			foreach(RequestDescription item in this.RequestDescriptionList)
-			{
-				this.AddToList(item.VideoID, item.NumberOfReqeusts);
-			}
-
-
+            foreach (RequestDescription item in this.RequestDescriptionList)
+            {
+                this.AddToList(item.VideoID, item.NumberOfReqeusts);
+            }
 		}
 
 
 		public List<VideoRequest> SortByFrequencyDescending()
 		{
-			var result = this.VideoRequestList.OrderByDescending(x => x.RequestTotal);
-			return result.ToList();
+			var result = this.VideoREquestList.OrderByDescending(x => x.RequestTotal);
+            return result.ToList();
 		}
 
 		public void AddToList(int videoId, int request)
@@ -72,6 +69,7 @@ namespace GHC.VideoServer
 	public class VideoRequest
 	{
 		public int VideoID;
+        public Video Video { get; set; }
 		public int RequestTotal;
 	}
 

@@ -45,12 +45,18 @@ namespace GHC.VideoServer
             {
                 String[] parts = lines[lineNumber].Split(new String[] { " " }, StringSplitOptions.RemoveEmptyEntries);
 
-                context .RequestDescriptionList.Add(new RequestDescription
+                var request = new RequestDescription
                 {
                     VideoID = int.Parse(parts[0]),
                     EndPointID = int.Parse(parts[1]),
                     NumberOfReqeusts = int.Parse(parts[2])
-                });
+                };
+
+                var video = context.Videos.Find(x => x.VideoID == request.VideoID);                
+                request.Video = video;
+                var endpoint = context.EndPointList.Find(x => x.EndPointID == request.EndPointID);
+                request.EndPoint = endpoint;                   
+                context.RequestDescriptionList.Add(request) ;
 
                 lineNumber++;
             }

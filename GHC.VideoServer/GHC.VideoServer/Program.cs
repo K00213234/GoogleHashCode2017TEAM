@@ -47,8 +47,6 @@ namespace GHC.VideoServer
 
      
     }
-
-  
 }
 
 
