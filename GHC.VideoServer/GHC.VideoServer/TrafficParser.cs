@@ -6,20 +6,11 @@ using System.Text;
 
 namespace GHC.VideoServer
 {
-
-
     public class TrafficParser
     {
-        public int[,] array;
-        int[] videoArray;
         List<Video> Videos = new List<Video>();
-        EndPoint[] endPointArray;
-        //public int videoCount;
-        //public int endpointCount;
-        //public int requestDescriptors;
-        //public int cacheServersCount;
-        //public int cacheServersCapacityMB;
-
+        List<EndPoint> EndPointList = new List<EndPoint>();
+        List<RequestDescription> RequestDescriptionList = new List<RequestDescription>();
         public FileDescriptor FileDescriptor { get; set; }
 
         public String filename;
@@ -35,9 +26,6 @@ namespace GHC.VideoServer
         {
             String[] lines = text.Split(new String[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
             this.ParseDefinitionLine(lines[0]);
-            this.videoArray = new int[this.FileDescriptor.VideoCount];
-            this.endPointArray = new EndPoint[this.FileDescriptor.EndpointCount];
-            //this.array = new int[this.videoCount, this.endpointCount];
 
             int lineNumber = 1;
             this.ParseAndSetVideoList(lines[lineNumber]);
@@ -53,7 +41,22 @@ namespace GHC.VideoServer
                     endPoint.Connections.Add(connectedCacheServer);
                     connectedCacheServer.EndPoint = endPoint;
                 }
-                endPointArray[endPointIndex] = endPoint;
+                EndPointList.Add(endPoint);
+            }
+
+
+            for (int requestIndex = 0; requestIndex < this.FileDescriptor.RequestDescriptorCount; requestIndex++)
+            {
+                String[] parts = lines[lineNumber].Split(new String[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+
+                RequestDescriptionList.Add(new RequestDescription
+                {
+                    VideoID = int.Parse(parts[0]),
+                    EndPointID = int.Parse(parts[1]),
+                    NumberOfReqeusts = int.Parse(parts[2])
+                });
+
+                lineNumber++;
             }
         }
         public EndPointToCacheServerConnection ParseConnectedCacheServer(string line)
@@ -74,7 +77,7 @@ namespace GHC.VideoServer
             {
                 VideoCount = int.Parse(parts[0]),
                 EndpointCount = int.Parse(parts[1]),
-                RequestDescriptors = int.Parse(parts[2]),
+                RequestDescriptorCount = int.Parse(parts[2]),
                 CacheServersCount = int.Parse(parts[3]),
                 CacheServersCapacityMB = int.Parse(parts[4]),
             };
@@ -96,8 +99,8 @@ namespace GHC.VideoServer
                 this.Videos.Add(new VideoServer.Video
                 {
                     VideoID = columnIndex,
-                    VideoSizeInMB = int.Parse(parts[columnIndex]) 
-                });                
+                    VideoSizeInMB = int.Parse(parts[columnIndex])
+                });
             }
         }
         public EndPoint ParseEndPoint(string line)

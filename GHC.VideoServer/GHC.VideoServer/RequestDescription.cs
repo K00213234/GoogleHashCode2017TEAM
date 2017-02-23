@@ -8,10 +8,10 @@ namespace GHC.VideoServer
 {
     public class RequestDescription
     {
-        //public int 
-        public int RequestDescriptionID { get; set; }
-        public int RequestEndPointIDOrigin { get; set; }
+        public int VideoID { get; set; }
+        
+        public int EndPointID { get; set; }
 
-        public int NumberOfRequests { get; set; }
+        public int NumberOfReqeusts { get; set; }        
     }
 }
