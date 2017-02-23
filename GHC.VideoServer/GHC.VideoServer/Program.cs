@@ -11,11 +11,11 @@ namespace GHC.VideoServer
 		static void Main(string[] args)
 		{
 			TrafficParser pizzaParser = new TrafficParser();
-            string filepath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "small.in"); ;
+            string filepath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "me_at_the_zoo.in"); ;
             pizzaParser.filename = filepath;
 			pizzaParser.Parse();
 
-			Console.WriteLine(pizzaParser.PrintPizza());
+			//Console.WriteLine(pizzaParser.PrintPizza());
 			Console.Read();
 		}
 	}
