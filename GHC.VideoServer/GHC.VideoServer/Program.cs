@@ -11,7 +11,17 @@ namespace GHC.VideoServer
 	{
 		static void Main(string[] args)
 		{
-			string filename="me_at_the_zoo";
+			
+			MainFile("me_at_the_zoo");
+			MainFile("videos_worth_spreading");
+			MainFile("trending_today");
+
+			MainFile("kittens");
+			Console.Read();
+		}
+		static void MainFile(string filename)
+		{
+			
 			TrafficParser parser = new TrafficParser();
             string filepath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, filename);
             parser.filename = filepath+".in";
