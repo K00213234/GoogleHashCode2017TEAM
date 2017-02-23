@@ -82,7 +82,7 @@ namespace GHC.VideoServer
             //this.array = new int[this.videoCount, this.endpointCount];
 
             int lineNumber = 1;
-            this.ParseVideoLine(lines[lineNumber]);
+            this.ParseAndSetVideoList(lines[lineNumber]);
             lineNumber++;
             for (int endPointIndex = 0; endPointIndex < this.FileDescriptor.EndpointCount; endPointIndex++)
             {
@@ -123,19 +123,23 @@ namespace GHC.VideoServer
 
         }
 
-        public RequestDescription ParseRequest(string line)
-        {
-            var result = new RequestDescription
-            {
-                I
-            }
-        }
-        public void ParseVideoLine(string line)
+        //public RequestDescription ParseRequest(string line)
+        //{
+        //    var result = new RequestDescription
+        //    {
+        //        I
+        //    }
+        //}
+        public void ParseAndSetVideoList(string line)
         {
             String[] parts = line.Split(new String[] { " " }, StringSplitOptions.RemoveEmptyEntries);
             for (int columnIndex = 0; columnIndex < parts.Length; columnIndex++)
             {
-                this.videoArray[columnIndex] = int.Parse(parts[columnIndex]);
+                this.Videos.Add(new VideoServer.Video
+                {
+                    VideoID = columnIndex,
+                    VideoSizeInMB = int.Parse(parts[columnIndex]) 
+                });                
             }
         }
         public EndPoint ParseEndPoint(string line)
