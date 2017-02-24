@@ -92,7 +92,7 @@ namespace GHC.VideoServer
                 Context.Videos.Add(new Video
                 {
                     VideoID = columnIndex,
-                    VideoSizeInMB = int.Parse(parts[columnIndex])
+                    VideoSizeInMb = int.Parse(parts[columnIndex])
                 });
             }
         }

@@ -1,8 +1,4 @@
-using System;
-using System.Linq;
 using System.Collections.Generic;
-using System.IO;
-using System.Text;
 
 namespace GHC.VideoServer.Model
 {
@@ -14,6 +10,5 @@ namespace GHC.VideoServer.Model
 
         public List<EndPointToCacheServerConnection> Connections { get { return this.connections; } }
         public List<EndPointToCacheServerConnection> connections = new List<EndPointToCacheServerConnection>();
-
     }
 }

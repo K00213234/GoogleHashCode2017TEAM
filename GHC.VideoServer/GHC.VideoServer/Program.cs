@@ -44,7 +44,7 @@ namespace GHC.VideoServer
                 {
                     var cacheServer = context.CacheServerList.Find(x => x.ID == connection.CacheServerID);
 
-                    if (cacheServer.ConsumedSpace() < request.Video.VideoSizeInMB)
+                    if (cacheServer.ConsumedSpace() < request.Video.VideoSizeInMb)
                     {
                         if (cacheServer.VideoList.Any(x => x.VideoID == request.VideoID))
                         {
@@ -69,7 +69,7 @@ namespace GHC.VideoServer
                 {
                     var cacheServer = context.CacheServerList.Find(x => x.ID == connection.CacheServerID);
 
-                    if (cacheServer.ConsumedSpace() < request.Video.VideoSizeInMB)
+                    if (cacheServer.ConsumedSpace() < request.Video.VideoSizeInMb)
                     {
                         cacheServer.VideoList.Add(new VideoRequest
                         { //good lord
@@ -89,7 +89,7 @@ namespace GHC.VideoServer
                 {
                     var cacheServer = context.CacheServerList.Find(x => x.ID == connection.CacheServerID);
 
-                    if (cacheServer.ConsumedSpace() < request.Video.VideoSizeInMB)
+                    if (cacheServer.ConsumedSpace() < request.Video.VideoSizeInMb)
                     {
                         cacheServer.VideoList.Add(new VideoRequest
                         { //good lord

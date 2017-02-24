@@ -13,7 +13,7 @@ namespace GHC.VideoServer.Model
             int sum = 0;
             foreach(var video in VideoList)
             {
-                sum += video.Video.VideoSizeInMB;
+                sum += video.Video.VideoSizeInMb;
             }
 
             return sum;
