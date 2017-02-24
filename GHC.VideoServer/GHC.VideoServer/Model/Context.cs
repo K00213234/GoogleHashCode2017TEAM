@@ -1,10 +1,7 @@
-using System;
-using System.Linq;
 using System.Collections.Generic;
-using System.IO;
-using System.Text;
+using System.Linq;
 
-namespace GHC.VideoServer
+namespace GHC.VideoServer.Model
 {
 	public class Context
 	{
@@ -67,50 +64,5 @@ namespace GHC.VideoServer
 
 		}
 		public List<CacheServer> CacheServerList = new List<CacheServer>();
-	}
-	public class VideoRequest
-	{
-		public int VideoID;
-        public Video Video { get; set; }
-		public int RequestTotal;
-	}
-
-	public class Solution
-	{
-		public Context context { get; set; }
-
-
-		public override String ToString()
-		{
-			String output = this.context.CacheServerList.Count + Environment.NewLine;
-			foreach(CacheServer item in this.context.CacheServerList)
-			{
-				output += item.ID;
-				for(int index = 0; index < item.VideoList.Count; index++)
-				{
-					output += " " + item.VideoList[index].VideoID;
-				}
-				output += Environment.NewLine;
-			}
-			return output;
-		}
-
-	}
-	public class CacheServer
-	{
-		public int ID { get; set; }
-		public List<VideoRequest> VideoList = new List<VideoRequest>();
-        public int MaxMB { get; set; }
-
-        public int ConsumedSpace()
-        {
-            int sum = 0;
-            foreach(var video in VideoList)
-            {
-                sum += video.Video.VideoSizeInMB;
-            }
-
-            return sum;
-        }
 	}
 }

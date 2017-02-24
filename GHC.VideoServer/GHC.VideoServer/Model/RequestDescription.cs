@@ -3,8 +3,9 @@ using System.Linq;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using GHC.VideoServer.Model;
 
-namespace GHC.VideoServer
+namespace GHC.VideoServer.Model
 {
     public class RequestDescription
     {

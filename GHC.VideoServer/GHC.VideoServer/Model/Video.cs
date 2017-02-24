@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace GHC.VideoServer
+namespace GHC.VideoServer.Model
 {
     public class Video
     {

@@ -1,46 +1,39 @@
-﻿using GHC.VideoServer;
+﻿using GHC.VideoServer.Model;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace GHC.VideoServer
 {
-	class Program
-	{
-		static void Main(string[] args)
-		{
-			
-			MainFile("me_at_the_zoo");
-			MainFile("videos_worth_spreading");
-			MainFile("trending_today");
+    internal class Program
+    {
+        private static void Main(string[] args)
+        {
+            ProcessFile("me_at_the_zoo");
+            ProcessFile("videos_worth_spreading");
+            ProcessFile("trending_today");
+            ProcessFile("kittens");
+        }
 
-			MainFile("kittens");
-			
-		}
-		static void MainFile(string filename)
-		{
-			
-			TrafficParser parser = new TrafficParser();
+        private static void ProcessFile(string filename)
+        {
+            //input
+            var fileParser = new FileParser();
             string filepath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, filename);
-            parser.filename = filepath+".in";
-            parser.Parse();
+            fileParser.filename = filepath + ".in";
+            fileParser.Parse();
 
-			Context  context = parser.context;
-			context.MakeCacheServers();
-            //context.LoadServers();
-            NonDuplicateMostRequestVideosFirst(context);            
-            Solution s = new Solution();
-			s.context = context;
-            string output = s.ToString();
-			CreateFile(output, filepath + ".out");
-            //PrintContext(parser.context); 
-              			
+            var context = fileParser.Context;
+            context.MakeCacheServers();
+
+            //algorithm
+            NonDuplicateMostRequestVideosFirst(context);
+
+            //output
+            var s = new Solution { context = context };
+            var output = s.ToString();
+            CreateFile(output, filepath + ".out");
             Console.WriteLine("really done");
-            //context.CacheServerList
-
-
         }
 
         private static void NonDuplicateMostRequestVideosFirst(Context context)
@@ -53,7 +46,7 @@ namespace GHC.VideoServer
 
                     if (cacheServer.ConsumedSpace() < request.Video.VideoSizeInMB)
                     {
-                        if(cacheServer.VideoList.Any(x => x.VideoID == request.VideoID))
+                        if (cacheServer.VideoList.Any(x => x.VideoID == request.VideoID))
                         {
                             //already on this server
                             continue;
@@ -67,7 +60,6 @@ namespace GHC.VideoServer
                 }
             }
         }
-
 
         private static void MostRequestVideosFirst(Context context)
         {
@@ -88,8 +80,6 @@ namespace GHC.VideoServer
                 }
             }
         }
-
-
 
         private static void FirstComeFirstServed(Context context)
         {
@@ -112,66 +102,60 @@ namespace GHC.VideoServer
         }
 
         public static void CreateFile(String text, String filePath)
-		{
-			//
-			//	Step 1A; Delete Existing File
-			//
-			if(File.Exists(filePath))
-				File.Delete(filePath);
-			else
-			{
-				//
-				//	Step 1B; Create Directory
-				//
-				String directoryPath = Path.GetDirectoryName(filePath);
-				if(!Directory.Exists(directoryPath))
-					Directory.CreateDirectory(directoryPath);
-			}
-			//
-			//	Step 2; Write File
-			//
-			using(StreamWriter streamWriter = File.CreateText(filePath))
-			{
+        {
+            //
+            //	Step 1A; Delete Existing File
+            //
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+            else
+            {
+                //
+                //	Step 1B; Create Directory
+                //
+                String directoryPath = Path.GetDirectoryName(filePath);
+                if (!Directory.Exists(directoryPath))
+                    Directory.CreateDirectory(directoryPath);
+            }
+            //
+            //	Step 2; Write File
+            //
+            using (StreamWriter streamWriter = File.CreateText(filePath))
+            {
+                streamWriter.Write(text);
+            }
+        }
 
-				streamWriter.Write(text);
-			}
-		}
-		//private static void PrintContext(Context context)
-		//{
+        //private static void PrintContext(Context Context)
+        //{
+        //	foreach (var endpoint in Context.EndPointList)
+        //	{
+        //		Console.WriteLine($"Endpoint: {endpoint.EndPointID} - {endpoint.LatencyInMiliSecondsFromDataCenter}");
+        //		foreach (var connection in endpoint.Connections)
+        //		{
+        //			Console.WriteLine($"    connection {connection.CacheServerID} - {connection.LatencyInMilliSecondsFromCacheToEndpoint}");
+        //		}
+        //	}
 
-		//	foreach (var endpoint in context.EndPointList)
-		//	{
-		//		Console.WriteLine($"Endpoint: {endpoint.EndPointID} - {endpoint.LatencyInMiliSecondsFromDataCenter}");
-		//		foreach (var connection in endpoint.Connections)
-		//		{
-		//			Console.WriteLine($"    connection {connection.CacheServerID} - {connection.LatencyInMilliSecondsFromCacheToEndpoint}");
-		//		}
-		//	}
-
-
-		//	foreach (var request in context.RequestDescriptionList)
-		//	{
-		//		Console.WriteLine($"video {request.VideoID} - {request.NumberOfReqeusts} - {request.EndPointID}");
-		//	}
-		//}
-
-
-	}
+        //	foreach (var request in Context.RequestDescriptionList)
+        //	{
+        //		Console.WriteLine($"video {request.VideoID} - {request.NumberOfReqeusts} - {request.EndPointID}");
+        //	}
+        //}
+    }
 }
-
 
 //public class FirstComeFirstServe
 //{
-//	private Context _context;    
+//	private Context _context;
 
-//	public FirstComeFirstServe(Context context)
+//	public FirstComeFirstServe(Context Context)
 //	{
-//		_context = context;
+//		_context = Context;
 //	}
 
 //	public void Process()
 //	{
-
 //	}
 
 //	private void SortRequests()

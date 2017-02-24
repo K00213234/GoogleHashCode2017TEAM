@@ -44,16 +44,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Context.cs" />
-    <Compile Include="EndPoint.cs" />
-    <Compile Include="EndPointToCacheServerConnection.cs" />
-    <Compile Include="FileDescriptor.cs" />
+    <Compile Include="Model\CacheServer.cs" />
+    <Compile Include="Model\Context.cs" />
+    <Compile Include="Model\EndPoint.cs" />
+    <Compile Include="Model\EndPointToCacheServerConnection.cs" />
+    <Compile Include="Model\FileDescriptor.cs" />
     <Compile Include="Mapper.cs" />
-    <Compile Include="RequestDescription.cs" />
-    <Compile Include="TrafficParser.cs" />
+    <Compile Include="Model\RequestDescription.cs" />
+    <Compile Include="Model\Solution.cs" />
+    <Compile Include="Model\VideoRequest.cs" />
+    <Compile Include="FileParser.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Video.cs" />
+    <Compile Include="Model\Video.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
