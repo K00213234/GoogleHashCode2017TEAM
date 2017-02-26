@@ -1,5 +1,6 @@
 ﻿using GHC.VideoServer.Model;
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace GHC.VideoServer
@@ -8,28 +9,45 @@ namespace GHC.VideoServer
     {
         public Context Context = new Context();
 
-        public String filename;
+        public string filename;
 
         public void Parse()
         {
-            String text = ReadAllFile(this.filename);
-            this.Parsetext(text);
+            var text = ReadAllFile(this.filename);
+            this.ParseText(text);
         }
 
-        public void Parsetext(String text)
+        public void ParseText(string text)
         {
-            String[] lines = text.Split(new String[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
-            this.ParseDefinitionLine(lines[0]);
+            //FileDescriptor
+            string[] lines = text.Split(new string[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
+            Context.FileDescriptor = ParseDefinitionLine(lines[0]);
 
-            int lineNumber = 1;
-            this.ParseAndSetVideoList(lines[lineNumber]);
-            lineNumber++;
-            for (int endPointIndex = 0; endPointIndex < this.Context.FileDescriptor.EndpointCount; endPointIndex++)
+            //CacheServers
+            Context.CacheServerList = new List<CacheServer>();
+            
+            for(int i = 0; i < Context.FileDescriptor.CacheServersCount; i++)
             {
-                EndPoint endPoint = ParseEndPoint(lines[lineNumber]);
-                endPoint.EndPointID = endPointIndex;
+                Context.CacheServerList.Add(new CacheServer
+                {
+                    ID = i,
+                    MaxMB = Context.FileDescriptor.CacheServersCapacityMB,   
+                });
+            }
+
+            //Videos
+            int lineNumber = 1;
+            Context.Videos = ParseVideos(lines[lineNumber]);
+            lineNumber++;
+
+            //EndPoint
+            Context.EndPointList = new List<EndPoint>();
+            for (int i = 0; i < this.Context.FileDescriptor.EndpointCount; i++)
+            {
+                var endPoint = ParseEndPoint(lines[lineNumber]);
+                endPoint.EndPointID = i;
                 lineNumber++;
-                for (int i = 0; i < endPoint.NumberOfConnectedCacheServers; i++, lineNumber++)
+                for (int j = 0; j < endPoint.NumberOfConnectedCacheServers; j++, lineNumber++)
                 {
                     var connectedCacheServer = this.ParseConnectedCacheServer(lines[lineNumber]);
                     endPoint.Connections.Add(connectedCacheServer);
@@ -38,9 +56,11 @@ namespace GHC.VideoServer
                 Context.EndPointList.Add(endPoint);
             }
 
+            //requests
+            Context.RequestDescriptionList = new List<RequestDescription>();
             for (int requestIndex = 0; requestIndex < this.Context.FileDescriptor.RequestDescriptorCount; requestIndex++)
             {
-                String[] parts = lines[lineNumber].Split(new String[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+                string[] parts = lines[lineNumber].Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
 
                 var request = new RequestDescription
                 {
@@ -49,10 +69,9 @@ namespace GHC.VideoServer
                     NumberOfReqeusts = int.Parse(parts[2])
                 };
 
-                var video = Context.Videos.Find(x => x.VideoID == request.VideoID);
-                request.Video = video;
-                var endpoint = Context.EndPointList.Find(x => x.EndPointID == request.EndPointID);
-                request.EndPoint = endpoint;
+                request.Video = Context.Videos.Find(x => x.VideoID == request.VideoID);
+                request.EndPoint = Context.EndPointList.Find(x => x.EndPointID == request.EndPointID);
+              
                 Context.RequestDescriptionList.Add(request);
 
                 lineNumber++;
@@ -61,8 +80,8 @@ namespace GHC.VideoServer
 
         public EndPointToCacheServerConnection ParseConnectedCacheServer(string line)
         {
-            String[] parts = line.Split(new String[] { " " }, StringSplitOptions.RemoveEmptyEntries);
-            EndPointToCacheServerConnection result = new EndPointToCacheServerConnection
+            string[] parts = line.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+            var result = new EndPointToCacheServerConnection
             {
                 CacheServerID = int.Parse(parts[0]),
                 LatencyInMilliSecondsFromCacheToEndpoint = int.Parse(parts[1])
@@ -70,11 +89,11 @@ namespace GHC.VideoServer
             return result;
         }
 
-        public void ParseDefinitionLine(String line)
+        public FileDescriptor ParseDefinitionLine(string line)
         {
-            String[] parts = line.Split(new String[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+            string[] parts = line.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
 
-            this.Context.FileDescriptor = new FileDescriptor
+            var result = new FileDescriptor
             {
                 VideoCount = int.Parse(parts[0]),
                 EndpointCount = int.Parse(parts[1]),
@@ -82,19 +101,23 @@ namespace GHC.VideoServer
                 CacheServersCount = int.Parse(parts[3]),
                 CacheServersCapacityMB = int.Parse(parts[4]),
             };
+            return result;
         }
 
-        public void ParseAndSetVideoList(string line)
+        public List<Video> ParseVideos(string line)
         {
-            String[] parts = line.Split(new String[] { " " }, StringSplitOptions.RemoveEmptyEntries);
-            for (int columnIndex = 0; columnIndex < parts.Length; columnIndex++)
+            var result = new List<Video>();
+            string[] parts = line.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+            for (int i = 0; i < parts.Length; i++)
             {
-                Context.Videos.Add(new Video
+                result.Add(new Video
                 {
-                    VideoID = columnIndex,
-                    VideoSizeInMb = int.Parse(parts[columnIndex])
+                    VideoID = i,
+                    VideoSizeInMb = int.Parse(parts[i])
                 });
             }
+
+            return result;
         }
 
         public EndPoint ParseEndPoint(string line)
