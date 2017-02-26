@@ -92,16 +92,22 @@ namespace GHC.VideoServer
 
                                 if(bestAlternative1 != null && bestAlternative2 != null)
                                 {
-                                    cacheserver.VideoList.Add(new VideoRequest()
+                                    if (!cacheserver.VideoList.Any(v => v.VideoID == bestAlternative1.VideoID))
                                     {
-                                        Video = bestAlternative1.Video,
-                                        VideoID = bestAlternative1.VideoID
-                                    });
-                                    cacheserver.VideoList.Add(new VideoRequest()
+                                        cacheserver.VideoList.Add(new VideoRequest()
+                                        {
+                                            Video = bestAlternative1.Video,
+                                            VideoID = bestAlternative1.VideoID
+                                        });
+                                    }
+                                    if (!cacheserver.VideoList.Any(v => v.VideoID == bestAlternative2.VideoID))
                                     {
-                                        Video = bestAlternative2.Video,
-                                        VideoID = bestAlternative2.VideoID
-                                    });
+                                        cacheserver.VideoList.Add(new VideoRequest()
+                                        {
+                                            Video = bestAlternative2.Video,
+                                            VideoID = bestAlternative2.VideoID
+                                        });
+                                    }
                                 }
                                 else
                                 {
