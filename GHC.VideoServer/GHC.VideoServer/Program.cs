@@ -90,7 +90,7 @@ namespace GHC.VideoServer
                                 bool foundBetterOptions = false;
                                 RequestCombinationSubOptimizer(context, request, ref foundBetterOptions, ref bestAlternative1, ref bestAlternative2);
 
-                                if (foundBetterOptions && bestAlternative1 != null && bestAlternative2 != null)
+                                if(bestAlternative1 != null && bestAlternative2 != null)
                                 {
                                     cacheserver.VideoList.Add(new VideoRequest()
                                     {
