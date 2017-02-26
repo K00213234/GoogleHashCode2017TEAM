@@ -30,7 +30,7 @@ namespace GHC.VideoServer
 
             //algorithm
             //NonDuplicateMostRequestVideosFirst(context);
-            EndpointOrientatedSizeByNumberOfRequestsStrategyAvoidDuplicateCaching(context);
+            EndpointOrientatedSizeByNumberOfRequestsStrategyAvoidDuplicateCachingWithRequestCombinationSubOptimizer(context);
             //output
             var s = new Solution { context = context };
             var output = s.ToString();
@@ -40,46 +40,27 @@ namespace GHC.VideoServer
             foreach(var cacheServer in context.CacheServerList)
             {
                 Console.WriteLine($"{cacheServer.ID} Consumed {cacheServer.ConsumedSpace()} - out of {cacheServer.MaxMB}");
-            }
-            
+            } 
         }
-        
-        //private static void FillUnusedCacheSpace(Context context)
-        //{
-        //    foreach(var cache in context.CacheServerList)
-        //    {
-        //        var unusedSpace = cache.MaxMB - cache.ConsumedSpace();
 
-        //        if (unusedSpace > 0)
-        //        {
-
-        //            //get the 
-        //            var requestsWithEndpointsToThisCache = context.RequestDescriptionList.Where(r => r.EndPoint.Connections.Any(c => c.CacheServerID == cache.ID));
-
-        //            requestsWithEndpointsToThisCache.Where(r => r.Video.VideoSizeInMb <= unusedSpace).OrderByDescending(o => o.Video.VideoSizeInMb)
-
-        //        }
-        //    }
-        //}
-
-        private static void EndpointOrientatedSizeByNumberOfRequestsStrategyAvoidDuplicateCaching(Context context)
+        private static void EndpointOrientatedSizeByNumberOfRequestsStrategyAvoidDuplicateCachingWithRequestCombinationSubOptimizer(Context context)
         {
-            foreach(var endpoint in context.EndPointList)
+            foreach (var endpoint in context.EndPointList)
             {
                 //get the most expensive videos - size by number of requests from this endpoint
                 var requests = context.RequestDescriptionList.Where(r => r.EndPointID == endpoint.EndPointID).OrderByDescending(r => r.NumberOfReqeusts * r.Video.VideoSizeInMb).ToList();
 
                 //get the connected cache server
                 var caches = new List<CacheServer>();
-                foreach(var connection in endpoint.Connections)
+                foreach (var connection in endpoint.Connections)
                 {
                     caches.Add(context.CacheServerList.Where(x => x.ID == connection.CacheServerID).First());
                 }
 
-                foreach(var request in requests)
+                foreach (var request in requests)
                 {
                     bool isVideoAlreadyCachedOnAnyConnectedServer = false;
-                    foreach(var cacheServer in caches)
+                    foreach (var cacheServer in caches)
                     {
                         if (cacheServer.VideoList.Any(v => v.VideoID == request.VideoID))
                         {
@@ -87,27 +68,49 @@ namespace GHC.VideoServer
                         }
                     }
 
-                    if(isVideoAlreadyCachedOnAnyConnectedServer)
+                    if (isVideoAlreadyCachedOnAnyConnectedServer)
                     {
                         continue;
                     }
 
-                    foreach(var cacheserver in caches)
+                    foreach (var cacheserver in caches)
                     {
-                        if(request.Video.VideoSizeInMb < (cacheserver.MaxMB - cacheserver.ConsumedSpace()))
+                        if (request.Video.VideoSizeInMb < (cacheserver.MaxMB - cacheserver.ConsumedSpace()))
                         {
-                            if(cacheserver.VideoList.Any(v => v.VideoID == request.VideoID))
+                            if (cacheserver.VideoList.Any(v => v.VideoID == request.VideoID))
                             {
                                 break;
                             }
                             else
                             {
-                                cacheserver.VideoList.Add(new VideoRequest
-                                { //good lord
-                                    Video = request.Video,
-                                    VideoID = request.VideoID
-                                });
 
+                                //Is there any combination of other vidoes that beat this for cost?
+                                RequestDescription bestAlternative1 = null;
+                                RequestDescription bestAlternative2 = null;
+                                bool foundBetterOptions = false;
+                                RequestCombinationSubOptimizer(context, request, ref foundBetterOptions, ref bestAlternative1, ref bestAlternative2);
+
+                                if (foundBetterOptions && bestAlternative1 != null && bestAlternative2 != null)
+                                {
+                                    cacheserver.VideoList.Add(new VideoRequest()
+                                    {
+                                        Video = bestAlternative1.Video,
+                                        VideoID = bestAlternative1.VideoID
+                                    });
+                                    cacheserver.VideoList.Add(new VideoRequest()
+                                    {
+                                        Video = bestAlternative2.Video,
+                                        VideoID = bestAlternative2.VideoID
+                                    });
+                                }
+                                else
+                                {
+                                    cacheserver.VideoList.Add(new VideoRequest
+                                    { //good lord
+                                        Video = request.Video,
+                                        VideoID = request.VideoID
+                                    });
+                                }
                                 break; //as we have added the video to a cache, no point in adding to others
                             }
                         }
@@ -115,6 +118,100 @@ namespace GHC.VideoServer
                 }
             }
         }
+
+        private static int RequestCombinationSubOptimizer(Context context, RequestDescription requestToBeat, ref bool foundBetterRequestsToCache, ref RequestDescription r1, ref RequestDescription r2)
+        {
+            var costToBeat = requestToBeat.Video.VideoSizeInMb * requestToBeat.NumberOfReqeusts;
+            var size = (requestToBeat.Video.VideoSizeInMb / 2);
+            var endpointID = requestToBeat.EndPointID;
+
+            var smallerRequests = context.RequestDescriptionList.Where(r => r.EndPointID == requestToBeat.EndPointID && r.Video.VideoSizeInMb <= size).ToList();
+
+            if (!smallerRequests.Any())
+            {
+                foundBetterRequestsToCache = false;
+                return 1;
+            }
+
+            RequestDescription firstRequest = smallerRequests.First();
+            RequestDescription secondRequest = null;
+
+            foreach (var request in smallerRequests)
+            {
+                var firstCost = firstRequest.NumberOfReqeusts * firstRequest.Video.VideoSizeInMb;
+                var secondCost = request.NumberOfReqeusts * request.Video.VideoSizeInMb;
+
+                if (firstCost + secondCost > costToBeat)
+                {
+                    secondRequest = request;
+                    foundBetterRequestsToCache = true;
+                }
+            }
+
+            if(foundBetterRequestsToCache)
+            {
+                r1 = firstRequest;
+                r2 = secondRequest;
+                foundBetterRequestsToCache = false;
+                return RequestCombinationSubOptimizer(context, r1, ref foundBetterRequestsToCache, ref r1, ref r2);
+            }
+
+            return 1;
+        }
+
+        //private static void EndpointOrientatedSizeByNumberOfRequestsStrategyAvoidDuplicateCaching(Context context)
+        //{
+        //    foreach(var endpoint in context.EndPointList)
+        //    {
+        //        //get the most expensive videos - size by number of requests from this endpoint
+        //        var requests = context.RequestDescriptionList.Where(r => r.EndPointID == endpoint.EndPointID).OrderByDescending(r => r.NumberOfReqeusts * r.Video.VideoSizeInMb).ToList();
+
+        //        //get the connected cache server
+        //        var caches = new List<CacheServer>();
+        //        foreach(var connection in endpoint.Connections)
+        //        {
+        //            caches.Add(context.CacheServerList.Where(x => x.ID == connection.CacheServerID).First());
+        //        }
+
+        //        foreach(var request in requests)
+        //        {
+        //            bool isVideoAlreadyCachedOnAnyConnectedServer = false;
+        //            foreach(var cacheServer in caches)
+        //            {
+        //                if (cacheServer.VideoList.Any(v => v.VideoID == request.VideoID))
+        //                {
+        //                    isVideoAlreadyCachedOnAnyConnectedServer = true;
+        //                }
+        //            }
+
+        //            if(isVideoAlreadyCachedOnAnyConnectedServer)
+        //            {
+        //                continue;
+        //            }
+
+        //            foreach(var cacheserver in caches)
+        //            {
+        //                if(request.Video.VideoSizeInMb < (cacheserver.MaxMB - cacheserver.ConsumedSpace()))
+        //                {
+        //                    if(cacheserver.VideoList.Any(v => v.VideoID == request.VideoID))
+        //                    {
+        //                        break;
+        //                    }
+        //                    else
+        //                    {
+        //                        cacheserver.VideoList.Add(new VideoRequest
+        //                        { //good lord
+        //                            Video = request.Video,
+        //                            VideoID = request.VideoID
+        //                        });
+
+        //                        break; //as we have added the video to a cache, no point in adding to others
+        //                    }
+        //                }
+        //            }
+        //        }
+        //    }
+        //}
 
         private static void NonDuplicateMostRequestVideosFirst(Context context)
         {
