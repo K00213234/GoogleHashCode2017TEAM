@@ -1,5 +1,6 @@
 ﻿using GHC.VideoServer.Model;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -10,9 +11,11 @@ namespace GHC.VideoServer
         private static void Main(string[] args)
         {
             ProcessFile("me_at_the_zoo");
-            //ProcessFile("videos_worth_spreading");
-            //ProcessFile("trending_today");
-            //ProcessFile("kittens");
+            ProcessFile("videos_worth_spreading");
+            ProcessFile("trending_today");
+            ProcessFile("kittens");
+            Console.WriteLine("finished");
+            Console.ReadKey();
         }
 
         private static void ProcessFile(string filename)
@@ -26,13 +29,54 @@ namespace GHC.VideoServer
             var context = fileParser.Context;
 
             //algorithm
-            NonDuplicateMostRequestVideosFirst(context);
-
+            //NonDuplicateMostRequestVideosFirst(context);
+            EndpointOrientatedSizeByNumberOfRequestsStrategy(context);
             //output
             var s = new Solution { context = context };
             var output = s.ToString();
             CreateFile(output, filepath + ".out");
             Console.WriteLine("really done");
+
+            foreach(var cacheServer in context.CacheServerList)
+            {
+                Console.WriteLine($"{cacheServer.ID} Consumed {cacheServer.ConsumedSpace()} - out of {cacheServer.MaxMB}");
+            }
+            
+        }
+        private static void EndpointOrientatedSizeByNumberOfRequestsStrategy(Context context)
+        {
+            foreach(var endpoint in context.EndPointList)
+            {
+                //get the most expensive videos - size by number of requests from this endpoint
+                var requests = context.RequestDescriptionList.Where(r => r.EndPointID == endpoint.EndPointID).OrderByDescending(r => r.NumberOfReqeusts * r.Video.VideoSizeInMb).ToList();
+
+                //get the connected cache server
+                var caches = new List<CacheServer>();
+                foreach(var connection in endpoint.Connections)
+                {
+                    caches.Add(context.CacheServerList.Where(x => x.ID == connection.CacheServerID).First());
+                }
+
+                foreach(var request in requests)
+                {
+                    foreach(var cacheserver in caches)
+                    {
+                        if(request.Video.VideoSizeInMb < (cacheserver.MaxMB - cacheserver.ConsumedSpace()))
+                        {
+                            if(cacheserver.VideoList.Any(v => v.VideoID == request.VideoID))
+                            {
+                                break;
+                            }
+
+                            cacheserver.VideoList.Add(new VideoRequest
+                            { //good lord
+                                Video = request.Video,
+                                VideoID = request.VideoID
+                            });
+                        }
+                    }
+                }
+            }
         }
 
         private static void NonDuplicateMostRequestVideosFirst(Context context)
@@ -41,7 +85,7 @@ namespace GHC.VideoServer
             {
                 foreach (var connection in request.EndPoint.Connections.OrderBy(x => x.LatencyInMilliSecondsFromCacheToEndpoint))
                 {
-                    var cacheServer = context.CacheServerList.Find(x => x.ID == connection.CacheServerID);
+                    var cacheServer = context.CacheServerList[connection.CacheServerID];
 
                     if (cacheServer.ConsumedSpace() < request.Video.VideoSizeInMb)
                     {
