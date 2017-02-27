@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.Serialization.Formatters;
 
 namespace GHC.VideoServer
 {
@@ -10,7 +11,7 @@ namespace GHC.VideoServer
     {
         private static void Main(string[] args)
         {
-            ProcessFile("me_at_the_zoo");
+            ProcessFile("me_at_the_zoo");            
             ProcessFile("videos_worth_spreading");
             ProcessFile("trending_today");
             ProcessFile("kittens");
@@ -35,12 +36,51 @@ namespace GHC.VideoServer
             var s = new Solution { context = context };
             var output = s.ToString();
             CreateFile(output, filepath + ".out");
-            Console.WriteLine("really done");
+           
 
-            foreach(var cacheServer in context.CacheServerList)
+            //foreach(var cacheServer in context.CacheServerList)
+            //{
+            //    Console.WriteLine($"{cacheServer.ID} Consumed {cacheServer.ConsumedSpace()} - out of {cacheServer.MaxMB}");
+            //} 
+            PrintHitMissStatistic(context,filename);
+            
+        }
+
+        private static bool IsRequestVideoCachedOnAnyConnectedServer(Context context, RequestDescription request)
+        {
+            var caches = context.CacheServerList.Where(c => request.EndPoint.Connections.Any(x => x.CacheServerID == c.ID)).ToList();
+
+            foreach (var cache in caches)
             {
-                Console.WriteLine($"{cacheServer.ID} Consumed {cacheServer.ConsumedSpace()} - out of {cacheServer.MaxMB}");
-            } 
+                var isFound = cache.VideoList.Any(v => v.VideoID == request.VideoID);
+
+                if (isFound)
+                {
+                    return true;
+                }
+            }
+                       
+            return false;
+        }
+        private static void PrintHitMissStatistic(Context context, string fileName)
+        {
+            int hits = 0;
+            int misses = 0;
+
+            for(int i = 0; i < context.RequestDescriptionList.Count; i++)
+            {
+                var request = context.RequestDescriptionList[i];
+                if (IsRequestVideoCachedOnAnyConnectedServer(context, request))
+                {
+                    hits++;
+                }
+                else
+                {
+                    misses++;
+                }
+                Console.Write($"\r {fileName.Substring(0,10)}:\t{hits}\t{misses}\t{hits}/{context.RequestDescriptionList.Count}");
+            }
+            Console.WriteLine();          
         }
 
         private static void EndpointOrientatedSizeByNumberOfRequestsStrategyAvoidDuplicateCachingWithRequestCombinationSubOptimizer(Context context)
@@ -81,44 +121,41 @@ namespace GHC.VideoServer
                             {
                                 break;
                             }
-                            else
+
+                            //Is there any combination of other vidoes that beat this for cost?
+                            RequestDescription bestAlternative1 = null;
+                            RequestDescription bestAlternative2 = null;
+                            bool foundBetterOptions = false;
+                            RequestCombinationSubOptimizer(context, request, ref foundBetterOptions, ref bestAlternative1, ref bestAlternative2);
+
+                            if(bestAlternative1 != null && bestAlternative2 != null)
                             {
-
-                                //Is there any combination of other vidoes that beat this for cost?
-                                RequestDescription bestAlternative1 = null;
-                                RequestDescription bestAlternative2 = null;
-                                bool foundBetterOptions = false;
-                                RequestCombinationSubOptimizer(context, request, ref foundBetterOptions, ref bestAlternative1, ref bestAlternative2);
-
-                                if(bestAlternative1 != null && bestAlternative2 != null)
+                                if (!cacheserver.VideoList.Any(v => v.VideoID == bestAlternative1.VideoID))
                                 {
-                                    if (!cacheserver.VideoList.Any(v => v.VideoID == bestAlternative1.VideoID))
+                                    cacheserver.VideoList.Add(new VideoRequest()
                                     {
-                                        cacheserver.VideoList.Add(new VideoRequest()
-                                        {
-                                            Video = bestAlternative1.Video,
-                                            VideoID = bestAlternative1.VideoID
-                                        });
-                                    }
-                                    if (!cacheserver.VideoList.Any(v => v.VideoID == bestAlternative2.VideoID))
-                                    {
-                                        cacheserver.VideoList.Add(new VideoRequest()
-                                        {
-                                            Video = bestAlternative2.Video,
-                                            VideoID = bestAlternative2.VideoID
-                                        });
-                                    }
-                                }
-                                else
-                                {
-                                    cacheserver.VideoList.Add(new VideoRequest
-                                    { //good lord
-                                        Video = request.Video,
-                                        VideoID = request.VideoID
+                                        Video = bestAlternative1.Video,
+                                        VideoID = bestAlternative1.VideoID
                                     });
                                 }
-                                break; //as we have added the video to a cache, no point in adding to others
+                                if (!cacheserver.VideoList.Any(v => v.VideoID == bestAlternative2.VideoID))
+                                {
+                                    cacheserver.VideoList.Add(new VideoRequest()
+                                    {
+                                        Video = bestAlternative2.Video,
+                                        VideoID = bestAlternative2.VideoID
+                                    });
+                                }
                             }
+                            else
+                            {
+                                cacheserver.VideoList.Add(new VideoRequest
+                                { //good lord
+                                    Video = request.Video,
+                                    VideoID = request.VideoID
+                                });
+                            }
+                            break; //as we have added the video to a cache, no point in adding to others
                         }
                     }
                 }
