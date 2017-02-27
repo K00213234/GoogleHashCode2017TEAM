@@ -64,6 +64,7 @@ namespace GHC.VideoServer
         }
         private static void PrintHitMissStatistic(Context context, string fileName)
         {
+            var shortFileName = fileName.Length > 11 ? fileName.Substring(0, 10) : fileName;
             int hits = 0;
             int misses = 0;
 
@@ -78,7 +79,7 @@ namespace GHC.VideoServer
                 {
                     misses++;
                 }
-                Console.Write($"\r {fileName.Substring(0,10)}:\t{hits}\t{misses}\t{hits}/{context.RequestDescriptionList.Count}");
+                Console.Write($"\r {shortFileName}:\t{hits}\t{misses}\t{hits}/{context.RequestDescriptionList.Count}");
             }
             Console.WriteLine();          
         }
