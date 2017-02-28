@@ -9,13 +9,13 @@ namespace GHC.VideoServer.Model
 
         public override String ToString()
         {
-            String output = this.context.CacheServerList.Count + Environment.NewLine;
-            foreach(CacheServer item in this.context.CacheServerList)
+            String output = this.context.CacheServers.Count + Environment.NewLine;
+            foreach(CacheServer item in this.context.CacheServers)
             {
                 output += item.ID;
-                for(int index = 0; index < item.VideoList.Count; index++)
+                for(int index = 0; index < item.Cache.Count; index++)
                 {
-                    output += " " + item.VideoList[index].VideoID;
+                    output += " " + item.Cache[index].VideoID;
                 }
                 output += Environment.NewLine;
             }

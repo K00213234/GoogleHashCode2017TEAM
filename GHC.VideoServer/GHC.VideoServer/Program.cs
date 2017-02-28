@@ -11,9 +11,9 @@ namespace GHC.VideoServer
         private static void Main(string[] args)
         {
             ProcessFile("me_at_the_zoo");
-            ProcessFile("videos_worth_spreading");
-            ProcessFile("trending_today");
-            ProcessFile("kittens");
+            //ProcessFile("videos_worth_spreading");
+            //ProcessFile("trending_today");
+            //ProcessFile("kittens");
             Console.WriteLine("finished");
             Console.ReadKey();
         }
@@ -30,31 +30,37 @@ namespace GHC.VideoServer
 
             //algorithm
             //NonDuplicateMostRequestVideosFirst(context);
-            EndpointOrientatedSizeByNumberOfRequestsStrategyAvoidDuplicateCachingWithRequestCombinationSubOptimizer(context);
+
+            var strategy = new Strategies.CostBased.CostBasedStrategy();
+            strategy.Run(context);
+            //EndpointOrientatedSizeByNumberOfRequestsStrategyAvoidDuplicateCachingWithRequestCombinationSubOptimizer(context);
             //output
             var s = new Solution { context = context };
             var output = s.ToString();
-            CreateFile(output, filepath + ".out");
+            //CreateFile(output, filepath + ".out");
             Console.WriteLine("really done");
 
-            foreach(var cacheServer in context.CacheServerList)
+            var sum = 0.0;
+            foreach(var cacheServer in context.CacheServers)
             {
-                Console.WriteLine($"{cacheServer.ID} Consumed {cacheServer.ConsumedSpace()} - out of {cacheServer.MaxMB}");
-            } 
+                sum += cacheServer.CalculateCacheScore();
+                Console.WriteLine($"{cacheServer.ID} Consumed {cacheServer.ConsumedSpace()} - out of {cacheServer.MaxMB}   score: {cacheServer.CalculateCacheScore()}");
+            }
+            Console.WriteLine($"Total {sum}");
         }
 
         private static void EndpointOrientatedSizeByNumberOfRequestsStrategyAvoidDuplicateCachingWithRequestCombinationSubOptimizer(Context context)
         {
-            foreach (var endpoint in context.EndPointList)
+            foreach (var endpoint in context.EndPoints)
             {
                 //get the most expensive videos - size by number of requests from this endpoint
-                var requests = context.RequestDescriptionList.Where(r => r.EndPointID == endpoint.EndPointID).OrderByDescending(r => r.NumberOfReqeusts * r.Video.VideoSizeInMb).ToList();
+                var requests = context.Requests.Where(r => r.EndPointID == endpoint.EndPointID).OrderByDescending(r => r.NumberOfReqeusts * r.Video.VideoSizeInMb).ToList();
 
                 //get the connected cache server
                 var caches = new List<CacheServer>();
                 foreach (var connection in endpoint.Connections)
                 {
-                    caches.Add(context.CacheServerList.Where(x => x.ID == connection.CacheServerID).First());
+                    caches.Add(context.CacheServers.Where(x => x.ID == connection.CacheServerID).First());
                 }
 
                 foreach (var request in requests)
@@ -62,7 +68,7 @@ namespace GHC.VideoServer
                     bool isVideoAlreadyCachedOnAnyConnectedServer = false;
                     foreach (var cacheServer in caches)
                     {
-                        if (cacheServer.VideoList.Any(v => v.VideoID == request.VideoID))
+                        if (cacheServer.Cache.Any(v => v.VideoID == request.VideoID))
                         {
                             isVideoAlreadyCachedOnAnyConnectedServer = true;
                         }
@@ -77,7 +83,7 @@ namespace GHC.VideoServer
                     {
                         if (request.Video.VideoSizeInMb < (cacheserver.MaxMB - cacheserver.ConsumedSpace()))
                         {
-                            if (cacheserver.VideoList.Any(v => v.VideoID == request.VideoID))
+                            if (cacheserver.Cache.Any(v => v.VideoID == request.VideoID))
                             {
                                 break;
                             }
@@ -92,17 +98,17 @@ namespace GHC.VideoServer
 
                                 if(bestAlternative1 != null && bestAlternative2 != null)
                                 {
-                                    if (!cacheserver.VideoList.Any(v => v.VideoID == bestAlternative1.VideoID))
+                                    if (!cacheserver.Cache.Any(v => v.VideoID == bestAlternative1.VideoID))
                                     {
-                                        cacheserver.VideoList.Add(new VideoRequest()
+                                        cacheserver.Cache.Add(new CachedVideoRequest()
                                         {
                                             Video = bestAlternative1.Video,
                                             VideoID = bestAlternative1.VideoID
                                         });
                                     }
-                                    if (!cacheserver.VideoList.Any(v => v.VideoID == bestAlternative2.VideoID))
+                                    if (!cacheserver.Cache.Any(v => v.VideoID == bestAlternative2.VideoID))
                                     {
-                                        cacheserver.VideoList.Add(new VideoRequest()
+                                        cacheserver.Cache.Add(new CachedVideoRequest()
                                         {
                                             Video = bestAlternative2.Video,
                                             VideoID = bestAlternative2.VideoID
@@ -111,7 +117,7 @@ namespace GHC.VideoServer
                                 }
                                 else
                                 {
-                                    cacheserver.VideoList.Add(new VideoRequest
+                                    cacheserver.Cache.Add(new CachedVideoRequest
                                     { //good lord
                                         Video = request.Video,
                                         VideoID = request.VideoID
@@ -131,7 +137,7 @@ namespace GHC.VideoServer
             var size = (requestToBeat.Video.VideoSizeInMb / 2);
             var endpointID = requestToBeat.EndPointID;
 
-            var smallerRequests = context.RequestDescriptionList.Where(r => r.EndPointID == requestToBeat.EndPointID && r.Video.VideoSizeInMb <= size).ToList();
+            var smallerRequests = context.Requests.Where(r => r.EndPointID == requestToBeat.EndPointID && r.Video.VideoSizeInMb <= size).ToList();
 
             if (!smallerRequests.Any())
             {
@@ -221,20 +227,20 @@ namespace GHC.VideoServer
 
         private static void NonDuplicateMostRequestVideosFirst(Context context)
         {
-            foreach (var request in context.RequestDescriptionList.OrderByDescending(x => x.NumberOfReqeusts))
+            foreach (var request in context.Requests.OrderByDescending(x => x.NumberOfReqeusts))
             {
                 foreach (var connection in request.EndPoint.Connections.OrderBy(x => x.LatencyInMilliSecondsFromCacheToEndpoint))
                 {
-                    var cacheServer = context.CacheServerList[connection.CacheServerID];
+                    var cacheServer = context.CacheServers[connection.CacheServerID];
 
                     if (cacheServer.ConsumedSpace() < request.Video.VideoSizeInMb)
                     {
-                        if (cacheServer.VideoList.Any(x => x.VideoID == request.VideoID))
+                        if (cacheServer.Cache.Any(x => x.VideoID == request.VideoID))
                         {
                             //already on this server
                             continue;
                         }
-                        cacheServer.VideoList.Add(new VideoRequest
+                        cacheServer.Cache.Add(new CachedVideoRequest
                         { //good lord
                             Video = request.Video,
                             VideoID = request.VideoID
@@ -246,15 +252,15 @@ namespace GHC.VideoServer
 
         private static void MostRequestVideosFirst(Context context)
         {
-            foreach (var request in context.RequestDescriptionList.OrderByDescending(x => x.NumberOfReqeusts))
+            foreach (var request in context.Requests.OrderByDescending(x => x.NumberOfReqeusts))
             {
                 foreach (var connection in request.EndPoint.Connections.OrderBy(x => x.LatencyInMilliSecondsFromCacheToEndpoint))
                 {
-                    var cacheServer = context.CacheServerList.Find(x => x.ID == connection.CacheServerID);
+                    var cacheServer = context.CacheServers.Find(x => x.ID == connection.CacheServerID);
 
                     if (cacheServer.ConsumedSpace() < request.Video.VideoSizeInMb)
                     {
-                        cacheServer.VideoList.Add(new VideoRequest
+                        cacheServer.Cache.Add(new CachedVideoRequest
                         { //good lord
                             Video = request.Video,
                             VideoID = request.VideoID
@@ -266,15 +272,15 @@ namespace GHC.VideoServer
 
         private static void FirstComeFirstServed(Context context)
         {
-            foreach (var request in context.RequestDescriptionList)
+            foreach (var request in context.Requests)
             {
                 foreach (var connection in request.EndPoint.Connections.OrderBy(x => x.LatencyInMilliSecondsFromCacheToEndpoint))
                 {
-                    var cacheServer = context.CacheServerList.Find(x => x.ID == connection.CacheServerID);
+                    var cacheServer = context.CacheServers.Find(x => x.ID == connection.CacheServerID);
 
                     if (cacheServer.ConsumedSpace() < request.Video.VideoSizeInMb)
                     {
-                        cacheServer.VideoList.Add(new VideoRequest
+                        cacheServer.Cache.Add(new CachedVideoRequest
                         { //good lord
                             Video = request.Video,
                             VideoID = request.VideoID

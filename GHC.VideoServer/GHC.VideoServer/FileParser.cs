@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace GHC.VideoServer
 {
@@ -24,11 +25,11 @@ namespace GHC.VideoServer
             Context.FileDescriptor = ParseDefinitionLine(lines[0]);
 
             //CacheServers
-            Context.CacheServerList = new List<CacheServer>();
+            Context.CacheServers = new List<CacheServer>();
             
             for(int i = 0; i < Context.FileDescriptor.CacheServersCount; i++)
             {
-                Context.CacheServerList.Add(new CacheServer
+                Context.CacheServers.Add(new CacheServer
                 {
                     ID = i,
                     MaxMB = Context.FileDescriptor.CacheServersCapacityMB,   
@@ -41,7 +42,7 @@ namespace GHC.VideoServer
             lineNumber++;
 
             //EndPoint
-            Context.EndPointList = new List<EndPoint>();
+            Context.EndPoints = new List<EndPoint>();
             for (int i = 0; i < this.Context.FileDescriptor.EndpointCount; i++)
             {
                 var endPoint = ParseEndPoint(lines[lineNumber]);
@@ -53,27 +54,42 @@ namespace GHC.VideoServer
                     endPoint.Connections.Add(connectedCacheServer);
                     connectedCacheServer.EndPoint = endPoint;
                 }
-                Context.EndPointList.Add(endPoint);
+                Context.EndPoints.Add(endPoint);
             }
 
             //requests
-            Context.RequestDescriptionList = new List<RequestDescription>();
+            Context.Requests = new List<RequestDescription>();
             for (int requestIndex = 0; requestIndex < this.Context.FileDescriptor.RequestDescriptorCount; requestIndex++)
             {
                 string[] parts = lines[lineNumber].Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
 
                 var request = new RequestDescription
                 {
+                    ID = requestIndex,
                     VideoID = int.Parse(parts[0]),
                     EndPointID = int.Parse(parts[1]),
                     NumberOfReqeusts = int.Parse(parts[2])
                 };
 
                 request.Video = Context.Videos.Find(x => x.VideoID == request.VideoID);
-                request.EndPoint = Context.EndPointList.Find(x => x.EndPointID == request.EndPointID);
-              
-                Context.RequestDescriptionList.Add(request);
+                request.EndPoint = Context.EndPoints.Find(x => x.EndPointID == request.EndPointID);
 
+                //is there an existing request from the same endpoint to for the same video
+                var dupes = Context.Requests.Where(x => x.VideoID == request.VideoID && x.EndPointID == request.EndPointID).ToList();
+
+                if (dupes.Count > 1)
+                {
+                    throw new Exception("esfsefds");
+                }
+
+                if (dupes.Any())
+                {
+                    dupes.First().NumberOfReqeusts += request.NumberOfReqeusts;
+                }
+                else
+                {
+                    Context.Requests.Add(request);
+                }
                 lineNumber++;
             }
         }
