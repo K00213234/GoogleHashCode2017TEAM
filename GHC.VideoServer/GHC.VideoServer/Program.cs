@@ -12,9 +12,9 @@ namespace GHC.VideoServer
         private static void Main(string[] args)
         {
             ProcessFile("me_at_the_zoo");
-            //ProcessFile("videos_worth_spreading");
-            //ProcessFile("trending_today");
-            //ProcessFile("kittens");
+            ProcessFile("videos_worth_spreading");
+            ProcessFile("trending_today");
+            ProcessFile("kittens");
             Console.WriteLine("finished");
             Console.ReadKey();
         }

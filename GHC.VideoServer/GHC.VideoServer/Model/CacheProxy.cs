@@ -35,6 +35,7 @@ namespace GHC.VideoServer.Model
 
         private void AddToAnyCache(RequestDescription request)
         {
+            var isEnoughSpace = true;
             for (int i = 0; i < _latentCaches.Count; i++)
             {
                 var latentCache = _latentCaches[i];
@@ -44,6 +45,41 @@ namespace GHC.VideoServer.Model
                 {
                     return;
                 }
+                if (outcome == AddToCacheResult.NotEnoughFreeSpace)
+                {
+                    isEnoughSpace = false;
+                }
+            }
+
+            //got to here ...  its not been added
+            //is this a better pick than another video
+            if (isEnoughSpace)
+            {
+                return;
+            }
+
+            for (int i = 0; i < _latentCaches.Count; i++)
+            {
+                var latentCache = _latentCaches[i];
+                bool breakout = false;
+                foreach(var cachedItem in latentCache.Cache.VideoCache.Values)
+                {
+                    if (cachedItem.Video.VideoSizeInMb > request.Video.VideoSizeInMb && latentCache.CalculateCachingScore(request) > cachedItem.CacheScore)
+                    {
+                        latentCache.Cache.VideoCache.Remove(cachedItem.VideoID); //modifying inside loop :(
+                        latentCache.Cache.VideoCache.Add(request.VideoID, new CachedVideoRequest()
+                        {
+                            CacheScore = latentCache.CalculateCachingScore(request),
+                            Video = request.Video,
+                            VideoID =  request.VideoID
+                        });
+
+                        breakout = true;
+                        break;
+                    }
+                }
+                if (breakout)
+                    break;
             }
         }
         //private AddToCacheResult NotEnoughFreeSpaceTryAndReplaceALowerScoringItem(LatentCacheServer cache, RequestDescription request)
