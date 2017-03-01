@@ -11,9 +11,9 @@ namespace GHC.VideoServer
         private static void Main(string[] args)
         {
             ProcessFile("me_at_the_zoo");
-            //ProcessFile("videos_worth_spreading");
-            //ProcessFile("trending_today");
-            //ProcessFile("kittens");
+            ProcessFile("videos_worth_spreading");
+            ProcessFile("trending_today");
+            ProcessFile("kittens");
             Console.WriteLine("finished");
             Console.ReadKey();
         }
@@ -44,7 +44,7 @@ namespace GHC.VideoServer
             foreach(var cacheServer in context.CacheServers)
             {
                 sum += cacheServer.CalculateCacheScore();
-                Console.WriteLine($"{cacheServer.ID} Consumed {cacheServer.ConsumedSpace()} - out of {cacheServer.MaxMB}   score: {cacheServer.CalculateCacheScore()}");
+                Console.WriteLine($"{cacheServer.ID} Consumed {cacheServer.ConsumedSpace()} - out of {cacheServer.MaxMB}   score: {cacheServer.CalculateCacheScore()} -number of Vidoes: {cacheServer.VideoCache.Count} / {context.Videos.Count}");
             }
             Console.WriteLine($"Total {sum}");
         }
@@ -68,7 +68,7 @@ namespace GHC.VideoServer
                     bool isVideoAlreadyCachedOnAnyConnectedServer = false;
                     foreach (var cacheServer in caches)
                     {
-                        if (cacheServer.Cache.Any(v => v.VideoID == request.VideoID))
+                        if (cacheServer.VideoCache.Any(v => v.VideoID == request.VideoID))
                         {
                             isVideoAlreadyCachedOnAnyConnectedServer = true;
                         }
@@ -83,7 +83,7 @@ namespace GHC.VideoServer
                     {
                         if (request.Video.VideoSizeInMb < (cacheserver.MaxMB - cacheserver.ConsumedSpace()))
                         {
-                            if (cacheserver.Cache.Any(v => v.VideoID == request.VideoID))
+                            if (cacheserver.VideoCache.Any(v => v.VideoID == request.VideoID))
                             {
                                 break;
                             }
@@ -98,17 +98,17 @@ namespace GHC.VideoServer
 
                                 if(bestAlternative1 != null && bestAlternative2 != null)
                                 {
-                                    if (!cacheserver.Cache.Any(v => v.VideoID == bestAlternative1.VideoID))
+                                    if (!cacheserver.VideoCache.Any(v => v.VideoID == bestAlternative1.VideoID))
                                     {
-                                        cacheserver.Cache.Add(new CachedVideoRequest()
+                                        cacheserver.VideoCache.Add(new CachedVideoRequest()
                                         {
                                             Video = bestAlternative1.Video,
                                             VideoID = bestAlternative1.VideoID
                                         });
                                     }
-                                    if (!cacheserver.Cache.Any(v => v.VideoID == bestAlternative2.VideoID))
+                                    if (!cacheserver.VideoCache.Any(v => v.VideoID == bestAlternative2.VideoID))
                                     {
-                                        cacheserver.Cache.Add(new CachedVideoRequest()
+                                        cacheserver.VideoCache.Add(new CachedVideoRequest()
                                         {
                                             Video = bestAlternative2.Video,
                                             VideoID = bestAlternative2.VideoID
@@ -117,7 +117,7 @@ namespace GHC.VideoServer
                                 }
                                 else
                                 {
-                                    cacheserver.Cache.Add(new CachedVideoRequest
+                                    cacheserver.VideoCache.Add(new CachedVideoRequest
                                     { //good lord
                                         Video = request.Video,
                                         VideoID = request.VideoID
@@ -235,12 +235,12 @@ namespace GHC.VideoServer
 
                     if (cacheServer.ConsumedSpace() < request.Video.VideoSizeInMb)
                     {
-                        if (cacheServer.Cache.Any(x => x.VideoID == request.VideoID))
+                        if (cacheServer.VideoCache.Any(x => x.VideoID == request.VideoID))
                         {
                             //already on this server
                             continue;
                         }
-                        cacheServer.Cache.Add(new CachedVideoRequest
+                        cacheServer.VideoCache.Add(new CachedVideoRequest
                         { //good lord
                             Video = request.Video,
                             VideoID = request.VideoID
@@ -260,7 +260,7 @@ namespace GHC.VideoServer
 
                     if (cacheServer.ConsumedSpace() < request.Video.VideoSizeInMb)
                     {
-                        cacheServer.Cache.Add(new CachedVideoRequest
+                        cacheServer.VideoCache.Add(new CachedVideoRequest
                         { //good lord
                             Video = request.Video,
                             VideoID = request.VideoID
@@ -280,7 +280,7 @@ namespace GHC.VideoServer
 
                     if (cacheServer.ConsumedSpace() < request.Video.VideoSizeInMb)
                     {
-                        cacheServer.Cache.Add(new CachedVideoRequest
+                        cacheServer.VideoCache.Add(new CachedVideoRequest
                         { //good lord
                             Video = request.Video,
                             VideoID = request.VideoID

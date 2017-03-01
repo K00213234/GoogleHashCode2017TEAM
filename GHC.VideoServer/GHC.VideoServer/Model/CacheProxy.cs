@@ -11,31 +11,49 @@ namespace GHC.VideoServer.Model
         private List<LatentCacheServer> _latentCaches;
         public CacheProxy(List<LatentCacheServer> latentCaches)
         {
-            _latentCaches = latentCaches;
+            _latentCaches = latentCaches.OrderByDescending(c => c.LatencyInMilliSeconds).ToList();
         }
 
         public void AddRequest(RequestDescription request)
         {
-            foreach (var latentCache in _latentCaches)
-            {
-                var cachingScore = latentCache.CalculateCachingScore(request);
-                var outcome = latentCache.AddRequestToCache(request, cachingScore);
-                if(outcome == AddToCacheResult.Added || outcome == AddToCacheResult.AlreadyInCache)
-                {
-                    return;
-                }
-                
-                if(outcome == AddToCacheResult.NotEnoughFreeSpace)
-                {
-                    outcome = NotEnoughFreeSpaceTryAndReplaceALowerScoringItem(latentCache, request);
+            bool isAlreadyInCache = false;
 
-                    if(outcome != AddToCacheResult.Added)
+            for (int i = 0; i < _latentCaches.Count; i++)
+            {
+                var latentCache = _latentCaches[i];
+                foreach (var video in latentCache.Cache.VideoCache)
+                {
+                    if (video.VideoID == request.VideoID)
                     {
-                        continue;
+                        //this video is already cached on a reachable cache server, this has double the benefit so up the score (make it harder to remove)
+                        video.CacheScore += latentCache.CalculateCachingScore(request);
                     }
-                    else
+                }
+            }
+
+            if (!isAlreadyInCache)
+            {
+                foreach (var latentCache in _latentCaches)
+                {
+                    var cachingScore = latentCache.CalculateCachingScore(request);
+                    var outcome = latentCache.AddRequestToCache(request, cachingScore);
+                    if (outcome == AddToCacheResult.Added)
                     {
-                        break;
+                        return;
+                    }
+
+                    if (outcome == AddToCacheResult.NotEnoughFreeSpace)
+                    {
+                        outcome = NotEnoughFreeSpaceTryAndReplaceALowerScoringItem(latentCache, request);
+
+                        if (outcome == AddToCacheResult.Added)
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            continue;
+                        }
                     }
                 }
             }
@@ -44,11 +62,11 @@ namespace GHC.VideoServer.Model
         private AddToCacheResult NotEnoughFreeSpaceTryAndReplaceALowerScoringItem(LatentCacheServer cache, RequestDescription request)
         {
             var score = cache.CalculateCachingScore(request);
-            var caches = cache.Cache.Cache.OrderBy(x => x.CacheScore).ToList();
-           
+            var caches = cache.Cache.VideoCache.OrderBy(x => x.CacheScore).ToList();
+
             bool isBetterScore = false;
             int i;
-            for(i = 0; i < caches.Count; i++)
+            for (i = 0; i < caches.Count; i++)
             {
                 var cachedItem = caches[i];
                 if (cachedItem.Video.VideoSizeInMb >= request.Video.VideoSizeInMb && cachedItem.CacheScore < score)

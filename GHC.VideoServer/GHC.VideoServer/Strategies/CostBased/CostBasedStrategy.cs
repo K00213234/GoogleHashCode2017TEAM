@@ -14,10 +14,26 @@ namespace GHC.VideoServer.Strategies.CostBased
         {
             FillCaches(context);
             UseAnyEmptySpace(context);
+            //PruneInfiniteCache(context);
             //UseAnyEmptySpace(context);
             //UseAnyEmptySpace(context);
             return context;
         }
+
+        //private void PruneInfiniteCache(Context context)
+        //{
+        //    foreach(var cache in context.CacheServers)
+        //    {
+        //        if(cache.ConsumedSpace() <= cache.MaxMB)
+        //        {
+        //            continue;
+        //        }
+        //        else
+        //        {
+        //            var i = 0;
+        //        }
+        //    }
+        //} 
 
         private void UseAnyEmptySpace(Context context)
         {

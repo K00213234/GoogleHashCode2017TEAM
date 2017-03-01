@@ -13,9 +13,9 @@ namespace GHC.VideoServer.Model
             foreach(CacheServer item in this.context.CacheServers)
             {
                 output += item.ID;
-                for(int index = 0; index < item.Cache.Count; index++)
+                for(int index = 0; index < item.VideoCache.Count; index++)
                 {
-                    output += " " + item.Cache[index].VideoID;
+                    output += " " + item.VideoCache[index].VideoID;
                 }
                 output += Environment.NewLine;
             }

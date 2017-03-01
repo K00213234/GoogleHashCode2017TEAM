@@ -17,7 +17,7 @@
 
         public int ID { get { return _cacheServer.ID; } }
 
-        public double CalculateCachingScore(RequestDescription request)
+        public int CalculateCachingScore(RequestDescription request)
         {
             return (request.NumberOfReqeusts * request.Video.VideoSizeInMb) / LatencyInMilliSeconds;
         }
@@ -29,7 +29,7 @@
                 return AddToCacheResult.NotEnoughFreeSpace;
             }
 
-            Cache.Cache.Add(new CachedVideoRequest
+            Cache.VideoCache.Add(new CachedVideoRequest
             {
                 Video = request.Video,
                 VideoID = request.VideoID,
