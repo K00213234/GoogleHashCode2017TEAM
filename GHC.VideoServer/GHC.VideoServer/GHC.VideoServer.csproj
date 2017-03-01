@@ -61,7 +61,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Model\Video.cs" />
     <Compile Include="Strategies\CostBased\CostBasedStrategy.cs" />
-    <Compile Include="Strategies\CostBased\SmallerFilesListCostBasedStrategy.cs" />
+    <Compile Include="Strategies\CostBased\PlugUnusedSpaceStrategy.cs" />
     <Compile Include="Strategies\Utility.cs" />
   </ItemGroup>
   <ItemGroup>

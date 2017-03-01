@@ -32,9 +32,9 @@ namespace GHC.VideoServer
             //algorithm
             //NonDuplicateMostRequestVideosFirst(context);            
             var costBasedStrategy = new CostBasedStrategy();
-            var smallerFileAccumulatorCostBasedReplacementStrategy = new SmallerFilesListCostBasedStrategy();
+            var smallerFileAccumulatorCostBasedReplacementStrategy = new PlugUnusedSpaceStrategy();
             costBasedStrategy.Run(context);
-            //smallerFileAccumulatorCostBasedReplacementStrategy.Run(context);
+            smallerFileAccumulatorCostBasedReplacementStrategy.Run(context);
 
             
             //output
@@ -42,17 +42,20 @@ namespace GHC.VideoServer
             var output = s.ToString();
             CreateFile(output, filepath + ".out");
             //Console.WriteLine("really done");
-            var totalStorageSpace = context.CacheServers.Sum(x => x.Value.MaxMB);
-            var storageConsumed = context.CacheServers.Sum(x => x.Value.ConsumedSpace());
-            var totalVideoSize = context.Videos.Sum(x => x.VideoSizeInMb);
-
-            Console.WriteLine($"storage: {totalStorageSpace} {storageConsumed} {totalVideoSize}");
+           
             var sum = 0.0;
             foreach(var cacheServer in context.CacheServers)
             {
                 sum += cacheServer.Value.CalculateCacheScore();
                 Console.WriteLine($"{cacheServer.Value.ID}: {(double) ((double)cacheServer.Value.ConsumedSpace() / (double) cacheServer.Value.MaxMB) * 100}%\t{cacheServer.Value.CalculateCacheScore()}\t{cacheServer.Value.VideoCache.Count}/{context.Videos.Count}");
             }
+
+            var totalStorageSpace = context.CacheServers.Sum(x => x.Value.MaxMB);
+            var storageConsumed = context.CacheServers.Sum(x => x.Value.ConsumedSpace());
+            var totalVideoSize = context.Videos.Sum(x => x.VideoSizeInMb);
+
+            Console.WriteLine($"storage: {totalStorageSpace} {storageConsumed} {totalVideoSize}");
+
             Console.WriteLine($"Total {sum} - {filename}");
         }
 
