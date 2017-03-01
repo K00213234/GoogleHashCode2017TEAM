@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq;
 using GHC.VideoServer.Model;
 
 namespace GHC.VideoServer.Strategies.CostBased
@@ -16,36 +12,31 @@ namespace GHC.VideoServer.Strategies.CostBased
 
             for (int counter = 0; counter < cacheCount; counter++)
             {
-                var lowestScoringCache = context.CacheServers[counter];
+                var cache = context.CacheServers[counter];
 
-                //var connections = context.CacheServerToEndPoint[lowestScoringCache.ID];
-
-                var smallestRequestsFirst = context.Requests.Where(r => r.Value.EndPoint.Connections.Any(c => c.CacheServerID == lowestScoringCache.ID)).OrderBy(r => r.Value.Video.VideoSizeInMb).ToArray();
-
-                foreach (var request in smallestRequestsFirst)
+                foreach (var request in context.Requests)
                 {
-                    if (lowestScoringCache.VideoCache.ContainsKey(request.Value.VideoID))
+                    if (cache.VideoCache.ContainsKey(request.Value.VideoID))
                     {
                         continue;
                     }
-                   
-                    //var c = request.Value.EndPoint.Connections.Where(t => t.CacheServerID == lowestScoringCache.ID).First();
 
+                    var endPointToCacheServerConnection = context.EndPointToCacheServer[request.Value.EndPointID].FirstOrDefault(x => x.CacheServerID == cache.ID);
 
-                    var c = context.EndPointToCacheServer[request.Value.EndPointID].First( x => x.CacheServerID == lowestScoringCache.ID);
-                    //var d = context.CacheServerToEndPoint[lowestScoringCache.ID];
-                    //var d = context.CacheServerToEndPoint[lowestScoringCache.ID].Values.First();
-                    //var e = context.EndPointToCacheServer[lowestScoringCache.ID];
+                    if (endPointToCacheServerConnection == null)
+                    {
+                        continue; // no connections from the endpoint to the cache
+                    }
 
-                    var latentCache = new LatentCacheServer(lowestScoringCache, c.LatencyInMilliSecondsFromCacheToEndpoint);
+                    var latentCache = new LatentCacheServer(cache, endPointToCacheServerConnection.LatencyInMilliSecondsFromCacheToEndpoint);
                     var requestScore = latentCache.CalculateCachingScore(request.Value);
                     var replacements = latentCache.Cache.VideoCache.Values.Where(p => p.CacheScore <= requestScore && p.Video.VideoSizeInMb > request.Value.Video.VideoSizeInMb).OrderBy(h => h.CacheScore);
 
                     if (replacements.Any())
                     {
                         var videoToReplace = replacements.First();
-                        lowestScoringCache.VideoCache.Remove(videoToReplace.VideoID);
-                        lowestScoringCache.VideoCache.Add(request.Value.VideoID, new CachedVideoRequest
+                        cache.VideoCache.Remove(videoToReplace.VideoID);
+                        cache.VideoCache.Add(request.Value.VideoID, new CachedVideoRequest
                         {
                             CacheScore = requestScore,
                             VideoID = request.Value.VideoID,

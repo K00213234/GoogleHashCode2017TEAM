@@ -26,13 +26,13 @@ namespace GHC.VideoServer
 
             //CacheServers
             Context.CacheServers = new Dictionary<int, CacheServer>();
-            
-            for(int i = 0; i < Context.FileDescriptor.CacheServersCount; i++)
+
+            for (int i = 0; i < Context.FileDescriptor.CacheServersCount; i++)
             {
                 Context.CacheServers.Add(i, new CacheServer
                 {
                     ID = i,
-                    MaxMB = Context.FileDescriptor.CacheServersCapacityMB,   
+                    MaxMB = Context.FileDescriptor.CacheServersCapacityMB,
                 });
             }
 
@@ -46,7 +46,7 @@ namespace GHC.VideoServer
             Context.EndPointToCacheServer = new Dictionary<int, List<EndPointToCacheServerConnection>>();
             Context.CacheServerToEndPoint = new Dictionary<int, List<EndPointToCacheServerConnection>>();
 
-            for (int i = 0; i < this.Context.FileDescriptor.EndpointCount; i++)
+            for (int i = 0; i < Context.FileDescriptor.EndpointCount; i++)
             {
                 var endPoint = ParseEndPoint(lines[lineNumber]);
                 endPoint.EndPointID = i;
@@ -57,22 +57,22 @@ namespace GHC.VideoServer
                 for (int j = 0; j < endPoint.NumberOfConnectedCacheServers; j++, lineNumber++)
                 {
                     var connectedCacheServer = ParseConnectedCacheServer(lines[lineNumber]);
-                    connectedCacheServer.ID = j;                                                
+                    connectedCacheServer.ID = j;
+                    connectedCacheServer.EndPoint = endPoint;
+
                     Context.EndPointToCacheServer[i].Add(connectedCacheServer);
 
-                    if (Context.CacheServerToEndPoint.ContainsKey(connectedCacheServer.CacheServerID))
+                    if (!Context.CacheServerToEndPoint.ContainsKey(connectedCacheServer.CacheServerID))
                     {
-                        Context.CacheServerToEndPoint[connectedCacheServer.CacheServerID].Add(connectedCacheServer);
+                        Context.CacheServerToEndPoint[connectedCacheServer.CacheServerID] = new List<EndPointToCacheServerConnection>();
                     }
-                    else
-                    {
-                        Context.CacheServerToEndPoint[connectedCacheServer.CacheServerID] = new List<EndPointToCacheServerConnection>() { connectedCacheServer };
-                    }
-                  
+
+                    Context.CacheServerToEndPoint[connectedCacheServer.CacheServerID].Add(connectedCacheServer);
+                    
                     endPoint.Connections.Add(connectedCacheServer);
-                    connectedCacheServer.EndPoint = endPoint;
+                    
                 }
-                Context.EndPoints.Add(endPoint.EndPointID,endPoint);
+                Context.EndPoints.Add(endPoint.EndPointID, endPoint);
             }
 
             //requests
@@ -91,8 +91,8 @@ namespace GHC.VideoServer
 
                 request.Video = Context.Videos.Find(x => x.VideoID == request.VideoID);
                 request.EndPoint = Context.EndPoints[request.EndPointID];
-                
-                Context.Requests.Add(request.ID, request);                
+
+                Context.Requests.Add(request.ID, request);
                 lineNumber++;
             }
         }
