@@ -23,9 +23,6 @@
             double videoSize = (double)request.Video.VideoSizeInMb;
             double latency = (double)LatencyInMilliSeconds;
 
-            //return (numberOfRequests * LatencyInMilliSeconds) / videoSize;
-            //return (request.NumberOfReqeusts / request.Video.VideoSizeInMb) * LatencyInMilliSeconds;
-
             return (numberOfRequests * videoSize) / latency;
         }
 

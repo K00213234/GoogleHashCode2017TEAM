@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Win32;
 
 namespace GHC.VideoServer.Model
 {
@@ -15,26 +16,36 @@ namespace GHC.VideoServer.Model
         }
 
         public void AddRequest(RequestDescription request)
-        {            
+        {
+            bool isAlreadyInCache = false;
             for (int i = 0; i < _latentCaches.Count; i++)
-            {
-                bool isAlreadyInCache = false;
+            {   
                 var latentCache = _latentCaches[i];
-
                 if (latentCache.Cache.VideoCache.ContainsKey(request.VideoID))
                 {
                     latentCache.Cache.VideoCache[request.VideoID].CacheScore += latentCache.CalculateCachingScore(request);
                     isAlreadyInCache = true;
                 }
-
-                if (isAlreadyInCache)
-                    continue;
-
-                var cachingScore = latentCache.CalculateCachingScore(request);             
-                var outcome = latentCache.AddRequestToCache(request, cachingScore);
+            }
+            if (!isAlreadyInCache)
+            {
+                AddToAnyCache(request);
             }
         }
 
+        private void AddToAnyCache(RequestDescription request)
+        {
+            for (int i = 0; i < _latentCaches.Count; i++)
+            {
+                var latentCache = _latentCaches[i];
+                var outcome = latentCache.AddRequestToCache(request, latentCache.CalculateCachingScore(request));
+
+                if (outcome == AddToCacheResult.Added)
+                {
+                    return;
+                }
+            }
+        }
         //private AddToCacheResult NotEnoughFreeSpaceTryAndReplaceALowerScoringItem(LatentCacheServer cache, RequestDescription request)
         //{
         //    var score = cache.CalculateCachingScore(request);

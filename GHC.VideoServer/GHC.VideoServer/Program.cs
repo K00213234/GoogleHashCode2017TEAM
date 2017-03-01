@@ -12,9 +12,9 @@ namespace GHC.VideoServer
         private static void Main(string[] args)
         {
             ProcessFile("me_at_the_zoo");
-            ProcessFile("videos_worth_spreading");
-            ProcessFile("trending_today");
-            ProcessFile("kittens");
+            //ProcessFile("videos_worth_spreading");
+            //ProcessFile("trending_today");
+            //ProcessFile("kittens");
             Console.WriteLine("finished");
             Console.ReadKey();
         }
@@ -34,7 +34,7 @@ namespace GHC.VideoServer
             var costBasedStrategy = new CostBasedStrategy();
             var smallerFileAccumulatorCostBasedReplacementStrategy = new SmallerFilesListCostBasedStrategy();
             costBasedStrategy.Run(context);
-            smallerFileAccumulatorCostBasedReplacementStrategy.Run(context);
+            //smallerFileAccumulatorCostBasedReplacementStrategy.Run(context);
 
             
             //output
@@ -42,7 +42,11 @@ namespace GHC.VideoServer
             var output = s.ToString();
             CreateFile(output, filepath + ".out");
             //Console.WriteLine("really done");
+            var totalStorageSpace = context.CacheServers.Sum(x => x.Value.MaxMB);
+            var storageConsumed = context.CacheServers.Sum(x => x.Value.ConsumedSpace());
+            var totalVideoSize = context.Videos.Sum(x => x.VideoSizeInMb);
 
+            Console.WriteLine($"storage: {totalStorageSpace} {storageConsumed} {totalVideoSize}");
             var sum = 0.0;
             foreach(var cacheServer in context.CacheServers)
             {

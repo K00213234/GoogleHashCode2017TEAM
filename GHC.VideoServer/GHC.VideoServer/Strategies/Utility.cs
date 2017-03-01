@@ -13,13 +13,15 @@ namespace GHC.VideoServer.Strategies
         {
             List<LatentCacheServer> result = new List<LatentCacheServer>();
 
-            foreach (var connection in endpoint.Connections)
+            var connections = context.EndPointToCacheServer[endpoint.EndPointID];
+
+            foreach (var connection in connections)
             {
                 var cache = context.CacheServers[connection.CacheServerID];//.First(x => x.Value.ID == connection.CacheServerID);
                 result.Add(new LatentCacheServer(cache, connection.LatencyInMilliSecondsFromCacheToEndpoint));
             }
 
-            return result.OrderBy(x => x.LatencyInMilliSeconds);
+            return result;//.OrderBy(x => x.LatencyInMilliSeconds);
         }
 
         public static CacheServer GetLowestScoringCacheServer(Context context)

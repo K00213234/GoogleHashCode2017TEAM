@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 
 namespace GHC.VideoServer.Model
 {
@@ -13,7 +14,7 @@ namespace GHC.VideoServer.Model
             {
                 output += item.Value.ID;
 
-                foreach (var video in item.Value.VideoCache.Values)
+                foreach (var video in item.Value.VideoCache.Values.OrderBy(x => x.VideoID))
                 {
                     output += " " + video.VideoID;
                 }
@@ -22,6 +23,5 @@ namespace GHC.VideoServer.Model
             }
             return output;
         }
-
     }
 }
