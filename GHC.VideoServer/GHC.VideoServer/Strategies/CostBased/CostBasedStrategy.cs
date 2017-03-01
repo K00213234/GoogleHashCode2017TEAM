@@ -8,64 +8,41 @@ namespace GHC.VideoServer.Strategies.CostBased
     
     public class CostBasedStrategy
     {
-        Context _context;
-
         public Context Run(Context context)
         {
             FillCaches(context);
-            UseAnyEmptySpace(context);
+            //CalculateAverageScore(context);
+
+
+            //UseAnyEmptySpace(context);
             //PruneInfiniteCache(context);
             //UseAnyEmptySpace(context);
             //UseAnyEmptySpace(context);
             return context;
         }
 
-        //private void PruneInfiniteCache(Context context)
+        //private int CalculateAverageScore(Context context)
         //{
-        //    foreach(var cache in context.CacheServers)
+        //    int counter = 1;
+        //    int sum = 0;
+        //    foreach (var cache in context.CacheServers)
         //    {
-        //        if(cache.ConsumedSpace() <= cache.MaxMB)
-        //        {
-        //            continue;
-        //        }
-        //        else
-        //        {
-        //            var i = 0;
-        //        }
+        //        counter++;
+        //        sum += (int) cache.Value.CalculateCacheScore();
         //    }
+        //    Console.WriteLine($"Average Score: {sum/counter}");
+        //    return sum / counter;
         //} 
-
-        private void UseAnyEmptySpace(Context context)
-        {
-            foreach (var request in context.Requests)
-            {
-                var latentCaches = GetConnectedCachesInOrderOfLatency(context, request.EndPoint).ToList();
-                var cacheProxy = new CacheProxy(latentCaches);
-                cacheProxy.AddRequest(request);
-            }
-        }
-
+                
         private void FillCaches(Context context)
         {
             foreach (var request in context.Requests)
             {
-                var latentCaches = GetConnectedCachesInOrderOfLatency(context, request.EndPoint).ToList();
+                var latentCaches = Utility.GetConnectedCachesInOrderOfLatency(context, request.Value.EndPoint).ToList();
                 var cacheProxy = new CacheProxy(latentCaches);
-                cacheProxy.AddRequest(request);
+                cacheProxy.AddRequest(request.Value);
             }
-        }
-        private IEnumerable<LatentCacheServer> GetConnectedCachesInOrderOfLatency(Context context, EndPoint endpoint)
-        {
-            List<LatentCacheServer> result = new List<LatentCacheServer>();
-            
-            foreach(var connection in endpoint.Connections)
-            {
-                var cache = context.CacheServers.First(x => x.ID == connection.CacheServerID);
-                result.Add(new LatentCacheServer(cache, connection.LatencyInMilliSecondsFromCacheToEndpoint));
-            }
-
-            return result.OrderBy(x => x.LatencyInMilliSeconds);
-        }
+        }      
         private void CalculateDuplicateEntries(Context context)
         {
              //[video][endpoint]    
@@ -78,10 +55,10 @@ namespace GHC.VideoServer.Strategies.CostBased
 
             foreach (var request in context.Requests)
             {
-                entries[request.VideoID][request.EndPointID]++;
-                if(entries[request.VideoID][request.EndPointID] > 1)
+                entries[request.Value.VideoID][request.Value.EndPointID]++;
+                if(entries[request.Value.VideoID][request.Value.EndPointID] > 1)
                 {
-                    Console.WriteLine($"duplicate {entries[request.VideoID][request.EndPointID]}: {request.VideoID} - {request.EndPointID} - {request.NumberOfReqeusts}");
+                    Console.WriteLine($"duplicate {entries[request.Value.VideoID][request.Value.EndPointID]}: {request.Value.VideoID} - {request.Value.EndPointID} - {request.Value.NumberOfReqeusts}");
                 }
             }
         }

@@ -11,9 +11,7 @@ namespace GHC.VideoServer.Model
 
         public int NumberOfReqeusts { get; set; }
 
-        public EndPoint EndPoint { get; set; }
-
-        public double? CachingScore { get; set; }
+        public EndPoint EndPoint { get; set; }      
 
     }
 }

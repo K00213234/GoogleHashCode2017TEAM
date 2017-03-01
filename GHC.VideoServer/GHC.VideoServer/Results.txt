@@ -1,0 +1,5 @@
+﻿61950   -- put on every cache and ballon score
+53601   -- ordering by smallest first
+61950   -- as #1 every cache balloon score  some cache servers are contribute very little to the score
+62104   -- try bolster the lowest caches
+69338

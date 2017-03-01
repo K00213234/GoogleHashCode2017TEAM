@@ -6,12 +6,22 @@ namespace GHC.VideoServer.Model
 	{
 		public List<Video> Videos { get; set; }
 
-        public List<EndPoint> EndPoints { get; set; }
+        public Dictionary<int, EndPoint> EndPoints { get; set; }
 
-        public List<RequestDescription> Requests { get; set; }
+        /// <summary>
+        /// key is EndPointID
+        /// </summary>
+        public Dictionary<int, List<EndPointToCacheServerConnection>> CacheServerToEndPoint { get; set; }
+
+        /// <summary>
+        /// key is CacheServerID  -> endpointID, cacheinfo
+        /// </summary>
+        public Dictionary<int, List<EndPointToCacheServerConnection>> EndPointToCacheServer  { get; set; }
+
+        public Dictionary<int, RequestDescription> Requests { get; set; }
 
         public FileDescriptor FileDescriptor { get; set; }
 
-        public List<CacheServer> CacheServers { get; set; }
+        public Dictionary<int, CacheServer> CacheServers { get; set; }
 	}
 }

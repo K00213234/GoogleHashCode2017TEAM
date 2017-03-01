@@ -15,74 +15,50 @@ namespace GHC.VideoServer.Model
         }
 
         public void AddRequest(RequestDescription request)
-        {
-            bool isAlreadyInCache = false;
-
+        {            
             for (int i = 0; i < _latentCaches.Count; i++)
             {
+                bool isAlreadyInCache = false;
                 var latentCache = _latentCaches[i];
-                foreach (var video in latentCache.Cache.VideoCache)
+
+                if (latentCache.Cache.VideoCache.ContainsKey(request.VideoID))
                 {
-                    if (video.VideoID == request.VideoID)
-                    {
-                        //this video is already cached on a reachable cache server, this has double the benefit so up the score (make it harder to remove)
-                        video.CacheScore += latentCache.CalculateCachingScore(request);
-                    }
+                    latentCache.Cache.VideoCache[request.VideoID].CacheScore += latentCache.CalculateCachingScore(request);
+                    isAlreadyInCache = true;
                 }
-            }
 
-            if (!isAlreadyInCache)
-            {
-                foreach (var latentCache in _latentCaches)
-                {
-                    var cachingScore = latentCache.CalculateCachingScore(request);
-                    var outcome = latentCache.AddRequestToCache(request, cachingScore);
-                    if (outcome == AddToCacheResult.Added)
-                    {
-                        return;
-                    }
+                if (isAlreadyInCache)
+                    continue;
 
-                    if (outcome == AddToCacheResult.NotEnoughFreeSpace)
-                    {
-                        outcome = NotEnoughFreeSpaceTryAndReplaceALowerScoringItem(latentCache, request);
-
-                        if (outcome == AddToCacheResult.Added)
-                        {
-                            break;
-                        }
-                        else
-                        {
-                            continue;
-                        }
-                    }
-                }
+                var cachingScore = latentCache.CalculateCachingScore(request);             
+                var outcome = latentCache.AddRequestToCache(request, cachingScore);
             }
         }
 
-        private AddToCacheResult NotEnoughFreeSpaceTryAndReplaceALowerScoringItem(LatentCacheServer cache, RequestDescription request)
-        {
-            var score = cache.CalculateCachingScore(request);
-            var caches = cache.Cache.VideoCache.OrderBy(x => x.CacheScore).ToList();
+        //private AddToCacheResult NotEnoughFreeSpaceTryAndReplaceALowerScoringItem(LatentCacheServer cache, RequestDescription request)
+        //{
+        //    var score = cache.CalculateCachingScore(request);
+        //    var caches = cache.Cache.VideoCache.OrderBy(x => x.CacheScore).ToList();
 
-            bool isBetterScore = false;
-            int i;
-            for (i = 0; i < caches.Count; i++)
-            {
-                var cachedItem = caches[i];
-                if (cachedItem.Video.VideoSizeInMb >= request.Video.VideoSizeInMb && cachedItem.CacheScore < score)
-                {
-                    isBetterScore = true;
-                    break;
-                }
-            }
+        //    bool isBetterScore = false;
+        //    int i;
+        //    for (i = 0; i < caches.Count; i++)
+        //    {
+        //        var cachedItem = caches[i];
+        //        if (cachedItem.Video.VideoSizeInMb >= request.Video.VideoSizeInMb && cachedItem.CacheScore < score)
+        //        {
+        //            isBetterScore = true;
+        //            break;
+        //        }
+        //    }
 
-            if (isBetterScore)
-            {
-                caches.RemoveAt(i);
-                cache.AddRequestToCache(request, score);
-                return AddToCacheResult.Added;
-            }
-            return AddToCacheResult.NotAdded;
-        }
+        //    if (isBetterScore)
+        //    {
+        //        caches.RemoveAt(i);
+        //        cache.AddRequestToCache(request, score);
+        //        return AddToCacheResult.Added;
+        //    }
+        //    return AddToCacheResult.NotAdded;
+        //}
     }
 }

@@ -17,9 +17,16 @@
 
         public int ID { get { return _cacheServer.ID; } }
 
-        public int CalculateCachingScore(RequestDescription request)
+        public double CalculateCachingScore(RequestDescription request)
         {
-            return (request.NumberOfReqeusts * request.Video.VideoSizeInMb) / LatencyInMilliSeconds;
+            double numberOfRequests = (double)request.NumberOfReqeusts;
+            double videoSize = (double)request.Video.VideoSizeInMb;
+            double latency = (double)LatencyInMilliSeconds;
+
+            //return (numberOfRequests * LatencyInMilliSeconds) / videoSize;
+            //return (request.NumberOfReqeusts / request.Video.VideoSizeInMb) * LatencyInMilliSeconds;
+
+            return (numberOfRequests * videoSize) / latency;
         }
 
         public AddToCacheResult AddRequestToCache(RequestDescription request, double cachingScore)
@@ -29,12 +36,20 @@
                 return AddToCacheResult.NotEnoughFreeSpace;
             }
 
-            Cache.VideoCache.Add(new CachedVideoRequest
+            if (Cache.VideoCache.ContainsKey(request.VideoID))
             {
-                Video = request.Video,
-                VideoID = request.VideoID,
-                CacheScore = cachingScore
-            });
+                Cache.VideoCache[request.VideoID].CacheScore += cachingScore;
+            }
+            else
+            {
+                Cache.VideoCache.Add(request.VideoID, new CachedVideoRequest
+                {
+                    Video = request.Video,
+                    VideoID = request.VideoID,
+                    CacheScore = cachingScore
+                });
+            }
+            
             return AddToCacheResult.Added;
         }
     }

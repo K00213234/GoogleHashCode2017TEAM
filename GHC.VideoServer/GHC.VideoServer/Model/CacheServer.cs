@@ -5,7 +5,7 @@ namespace GHC.VideoServer.Model
     public class CacheServer
     {
         public int ID { get; set; }
-        public List<CachedVideoRequest> VideoCache = new List<CachedVideoRequest>();
+        public Dictionary<int, CachedVideoRequest> VideoCache = new Dictionary<int, CachedVideoRequest>();
         public int MaxMB { get; set; }
 
         public int ConsumedSpace()
@@ -13,7 +13,7 @@ namespace GHC.VideoServer.Model
             int sum = 0;
             foreach(var video in VideoCache)
             {
-                sum += video.Video.VideoSizeInMb;
+                sum += video.Value.Video.VideoSizeInMb;
             }
 
             return sum;
@@ -24,7 +24,7 @@ namespace GHC.VideoServer.Model
             var result = 0.0;
             foreach(var cachedItem in VideoCache)
             {
-                result += cachedItem.CacheScore;
+                result += cachedItem.Value.CacheScore;
             }
             return result;
         }
