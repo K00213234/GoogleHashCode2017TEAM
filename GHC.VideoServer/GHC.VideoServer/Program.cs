@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using GHC.VideoServer.Strategies.CostBased;
+using GHC.VideoServer.Strategies.InfinitePrune;
 
 namespace GHC.VideoServer
 {
@@ -12,9 +13,9 @@ namespace GHC.VideoServer
         private static void Main(string[] args)
         {
             ProcessFile("me_at_the_zoo");
-            ProcessFile("videos_worth_spreading");
-            ProcessFile("trending_today");
-            ProcessFile("kittens");
+            //ProcessFile("videos_worth_spreading");
+            //ProcessFile("trending_today");
+            //ProcessFile("kittens");
             Console.WriteLine("finished");
             Console.ReadKey();
         }
@@ -29,14 +30,19 @@ namespace GHC.VideoServer
 
             var context = fileParser.Context;
 
-            //algorithm
-            //NonDuplicateMostRequestVideosFirst(context);            
+            //algorithm  
             var costBasedStrategy = new CostBasedStrategy();
-            var smallerFileAccumulatorCostBasedReplacementStrategy = new PlugUnusedSpaceStrategy();
             costBasedStrategy.Run(context);
+            //costBasedStrategy.Run(context);
+
+            //get the hight
+            //costBasedStrategy.Run(context);
+            //var infiniteCachePruneCostBasedStrategy = new InfiniteCachePruneCostBasedStrategy();
+            //infiniteCachePruneCostBasedStrategy.Run(context);
+
+            var smallerFileAccumulatorCostBasedReplacementStrategy = new PlugUnusedSpaceStrategy();
             smallerFileAccumulatorCostBasedReplacementStrategy.Run(context);
 
-            
             //output
             var s = new Solution { Context = context };
             var output = s.ToString();
@@ -48,7 +54,7 @@ namespace GHC.VideoServer
             {
                 sum += cacheServer.Value.CalculateCacheScore();
                 Console.WriteLine($"{cacheServer.Value.ID}: {(double) ((double)cacheServer.Value.ConsumedSpace() / (double) cacheServer.Value.MaxMB) * 100}%\t{cacheServer.Value.CalculateCacheScore()}\t{cacheServer.Value.VideoCache.Count}/{context.Videos.Count}");
-            }
+            } 
 
             var totalStorageSpace = context.CacheServers.Sum(x => x.Value.MaxMB);
             var storageConsumed = context.CacheServers.Sum(x => x.Value.ConsumedSpace());
@@ -83,42 +89,5 @@ namespace GHC.VideoServer
                 streamWriter.Write(text);
             }
         }
-
-        //private static void PrintContext(Context Context)
-        //{
-        //	foreach (var endpoint in Context.EndPointList)
-        //	{
-        //		Console.WriteLine($"Endpoint: {endpoint.EndPointID} - {endpoint.LatencyInMiliSecondsFromDataCenter}");
-        //		foreach (var connection in endpoint.Connections)
-        //		{
-        //			Console.WriteLine($"    connection {connection.CacheServerID} - {connection.LatencyInMilliSecondsFromCacheToEndpoint}");
-        //		}
-        //	}
-
-        //	foreach (var request in Context.RequestDescriptionList)
-        //	{
-        //		Console.WriteLine($"video {request.VideoID} - {request.NumberOfReqeusts} - {request.EndPointID}");
-        //	}
-        //}
     }
 }
-
-//public class FirstComeFirstServe
-//{
-//	private Context _context;
-
-//	public FirstComeFirstServe(Context Context)
-//	{
-//		_context = Context;
-//	}
-
-//	public void Process()
-//	{
-//	}
-
-//	private void SortRequests()
-//	{
-//		_context.RequestDescriptionList.OrderBy(x => x.NumberOfReqeusts)
-//	}
-
-//}

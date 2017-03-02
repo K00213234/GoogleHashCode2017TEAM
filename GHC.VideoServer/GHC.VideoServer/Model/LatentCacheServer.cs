@@ -19,9 +19,9 @@
 
         public double CalculateCachingScore(RequestDescription request)
         {
-            double numberOfRequests = (double)request.NumberOfReqeusts;
-            double videoSize = (double)request.Video.VideoSizeInMb;
-            double latency = (double)LatencyInMilliSeconds;
+            double numberOfRequests = (double)request.NumberOfReqeusts;// / 1000;
+            double videoSize = (double)request.Video.VideoSizeInMb;// / 1000;
+            double latency = (double)LatencyInMilliSeconds;// / 1000;
 
             return (numberOfRequests * videoSize) / latency;
         }
@@ -47,6 +47,27 @@
                 });
             }
             
+            return AddToCacheResult.Added;
+        }
+
+
+        public AddToCacheResult AddRequestToInfiniteCache(RequestDescription request, double cachingScore)
+        {          
+
+            if (Cache.VideoCache.ContainsKey(request.VideoID))
+            {
+                Cache.VideoCache[request.VideoID].CacheScore += cachingScore;
+            }
+            else
+            {
+                Cache.VideoCache.Add(request.VideoID, new CachedVideoRequest
+                {
+                    Video = request.Video,
+                    VideoID = request.VideoID,
+                    CacheScore = cachingScore
+                });
+            }
+
             return AddToCacheResult.Added;
         }
     }

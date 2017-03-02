@@ -17,7 +17,7 @@ namespace GHC.VideoServer.Strategies.CostBased
         {
             foreach (var request in context.Requests)
             {
-                var latentCaches = Utility.GetConnectedCachesInOrderOfLatency(context, request.Value.EndPoint).ToList();
+                var latentCaches = Utility.GetConnectedCachesInOrderOfLatency(context, request.Value.EndPoint).ToList();                
                 var cacheProxy = new CacheProxy(latentCaches);
                 cacheProxy.AddRequest(request.Value);
             }

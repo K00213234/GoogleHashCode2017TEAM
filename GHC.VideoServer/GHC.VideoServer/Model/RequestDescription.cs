@@ -13,5 +13,6 @@ namespace GHC.VideoServer.Model
 
         public EndPoint EndPoint { get; set; }      
 
+        public double EstimatedCachingScore { get; set; }
     }
 }

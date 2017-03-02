@@ -23,5 +23,6 @@ namespace GHC.VideoServer.Model
         public FileDescriptor FileDescriptor { get; set; }
 
         public Dictionary<int, CacheServer> CacheServers { get; set; }
+        
 	}
 }

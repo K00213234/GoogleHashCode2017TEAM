@@ -17,16 +17,39 @@ namespace GHC.VideoServer.Model
 
         public void AddRequest(RequestDescription request)
         {
-            bool isAlreadyInCache = false;
+            bool isAlreadyInCache = false;            
+            //var cacheDominatingVideo = new Dictionary<int, CachedVideoRequest>();
+          
             for (int i = 0; i < _latentCaches.Count; i++)
             {   
                 var latentCache = _latentCaches[i];
                 if (latentCache.Cache.VideoCache.ContainsKey(request.VideoID))
                 {
-                    latentCache.Cache.VideoCache[request.VideoID].CacheScore += latentCache.CalculateCachingScore(request);
-                    isAlreadyInCache = true;
+                    if (isAlreadyInCache)
+                    {
+                        //cacheDominatingVideo.Add(i, latentCache.Cache.VideoCache[request.VideoID]);
+                    }
+                    else
+                    {
+                        latentCache.Cache.VideoCache[request.VideoID].CacheScore += latentCache.CalculateCachingScore(request);
+                        isAlreadyInCache = true;
+                    }
+                    
                 }
             }
+            
+            //var orderedCacheDominatingVideos = cacheDominatingVideo.OrderByDescending(v => v.Value.CacheScore).ToList();
+            //for (int i = 0; i < orderedCacheDominatingVideos.Count;  i++)
+            //{
+            //    if (i == orderedCacheDominatingVideos.Count - 1) // the last one, the highest scoring one, keep that
+            //    {
+            //        continue;
+            //    }
+
+            //    var video = orderedCacheDominatingVideos[i];
+            //    _latentCaches[video.Key].Cache.VideoCache.Remove(video.Value.VideoID);      //ideally we should keep the highest scoring video                         
+            //}
+
             if (!isAlreadyInCache)
             {
                 AddToAnyCache(request);
@@ -79,8 +102,8 @@ namespace GHC.VideoServer.Model
                     }
                 }
                 if (breakout)
-                    break;
-            }
+                    break;                
+            }            
         }
         //private AddToCacheResult NotEnoughFreeSpaceTryAndReplaceALowerScoringItem(LatentCacheServer cache, RequestDescription request)
         //{
