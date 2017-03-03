@@ -40,7 +40,7 @@ namespace GHC.VideoServer.Strategies.InfinitePrune
                 var outcome = latentCache.AddRequestToInfiniteCache(request, latentCache.CalculateCachingScore(request));
                 if (outcome == AddToCacheResult.Added)
                 {
-                    return; // no need to add to another cache
+                    //return; // no need to add to another cache
                 }
             }           
         }       

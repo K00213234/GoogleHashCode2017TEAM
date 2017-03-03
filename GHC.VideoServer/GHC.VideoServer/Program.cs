@@ -32,14 +32,15 @@ namespace GHC.VideoServer
 
             //algorithm  
             var costBasedStrategy = new CostBasedStrategy();
-            costBasedStrategy.Run(context);
-            //costBasedStrategy.Run(context);
-
+           
             //get the hight
             //costBasedStrategy.Run(context);
-            //var infiniteCachePruneCostBasedStrategy = new InfiniteCachePruneCostBasedStrategy();
-            //infiniteCachePruneCostBasedStrategy.Run(context);
+            var infiniteCachePruneCostBasedStrategy = new InfiniteCachePruneCostBasedStrategy();
+            infiniteCachePruneCostBasedStrategy.Run(context);
+            //costBasedStrategy.Run(context);
+            //            costBasedStrategy.Run(context);
 
+            //infiniteCachePruneCostBasedStrategy.Run(context);
             var smallerFileAccumulatorCostBasedReplacementStrategy = new PlugUnusedSpaceStrategy();
             smallerFileAccumulatorCostBasedReplacementStrategy.Run(context);
 

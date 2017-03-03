@@ -27,11 +27,36 @@ namespace GHC.VideoServer.Strategies.InfinitePrune
 
         private void Prune(Context context)
         {
-            foreach (var cache in context.CacheServers)
+            //foreach (var cache in context.CacheServers)
+            //{
+            //    PruneCachesToAverage(cache.Value);                
+            //}
+
+            foreach (var cacheServer in context.CacheServers)
             {
-                PruneCachesToAverage(cache.Value);                
+                PruneLowestScoringItems(cacheServer.Value);
             }
         }
+
+        private void PruneLowestScoringItems(CacheServer cacheServer)
+        {
+            var cache = cacheServer.VideoCache.Values.OrderByDescending(v => v.CacheScore).ToList();
+            var consumedSpace = cacheServer.ConsumedSpace();
+            for (int i = cache.Count - 1; i >= 0; i--)
+            {
+                if (cacheServer.MaxMB < consumedSpace)
+                {
+                    consumedSpace -= cache[i].Video.VideoSizeInMb;
+                    cacheServer.VideoCache.Remove(cache[i].VideoID);
+                }
+
+                if (consumedSpace <= cacheServer.MaxMB)
+                {
+                    return;
+                }
+            }
+        }
+
 
         private void PruneCachesToAverage(CacheServer cacheServer, double recommendedScaling = 0)
         {
