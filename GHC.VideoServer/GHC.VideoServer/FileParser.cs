@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace GHC.VideoServer
 {
@@ -24,14 +25,14 @@ namespace GHC.VideoServer
             Context.FileDescriptor = ParseDefinitionLine(lines[0]);
 
             //CacheServers
-            Context.CacheServerList = new List<CacheServer>();
-            
-            for(int i = 0; i < Context.FileDescriptor.CacheServersCount; i++)
+            Context.CacheServers = new Dictionary<int, CacheServer>();
+
+            for (int i = 0; i < Context.FileDescriptor.CacheServersCount; i++)
             {
-                Context.CacheServerList.Add(new CacheServer
+                Context.CacheServers.Add(i, new CacheServer
                 {
                     ID = i,
-                    MaxMB = Context.FileDescriptor.CacheServersCapacityMB,   
+                    MaxMB = Context.FileDescriptor.CacheServersCapacityMB,
                 });
             }
 
@@ -41,39 +42,57 @@ namespace GHC.VideoServer
             lineNumber++;
 
             //EndPoint
-            Context.EndPointList = new List<EndPoint>();
-            for (int i = 0; i < this.Context.FileDescriptor.EndpointCount; i++)
+            Context.EndPoints = new Dictionary<int, EndPoint>();
+            Context.EndPointToCacheServer = new Dictionary<int, List<EndPointToCacheServerConnection>>();
+            Context.CacheServerToEndPoint = new Dictionary<int, List<EndPointToCacheServerConnection>>();
+
+            for (int i = 0; i < Context.FileDescriptor.EndpointCount; i++)
             {
                 var endPoint = ParseEndPoint(lines[lineNumber]);
                 endPoint.EndPointID = i;
                 lineNumber++;
+
+                Context.EndPointToCacheServer[endPoint.EndPointID] = new List<EndPointToCacheServerConnection>();
+
                 for (int j = 0; j < endPoint.NumberOfConnectedCacheServers; j++, lineNumber++)
                 {
-                    var connectedCacheServer = this.ParseConnectedCacheServer(lines[lineNumber]);
-                    endPoint.Connections.Add(connectedCacheServer);
+                    var connectedCacheServer = ParseConnectedCacheServer(lines[lineNumber]);
+                    connectedCacheServer.ID = j;
                     connectedCacheServer.EndPoint = endPoint;
+
+                    Context.EndPointToCacheServer[i].Add(connectedCacheServer);
+
+                    if (!Context.CacheServerToEndPoint.ContainsKey(connectedCacheServer.CacheServerID))
+                    {
+                        Context.CacheServerToEndPoint[connectedCacheServer.CacheServerID] = new List<EndPointToCacheServerConnection>();
+                    }
+
+                    Context.CacheServerToEndPoint[connectedCacheServer.CacheServerID].Add(connectedCacheServer);
+                    
+                    endPoint.Connections.Add(connectedCacheServer);
+                    
                 }
-                Context.EndPointList.Add(endPoint);
+                Context.EndPoints.Add(endPoint.EndPointID, endPoint);
             }
 
             //requests
-            Context.RequestDescriptionList = new List<RequestDescription>();
+            Context.Requests = new Dictionary<int, RequestDescription>();
             for (int requestIndex = 0; requestIndex < this.Context.FileDescriptor.RequestDescriptorCount; requestIndex++)
             {
                 string[] parts = lines[lineNumber].Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
 
                 var request = new RequestDescription
                 {
+                    ID = requestIndex,
                     VideoID = int.Parse(parts[0]),
                     EndPointID = int.Parse(parts[1]),
                     NumberOfReqeusts = int.Parse(parts[2])
                 };
 
                 request.Video = Context.Videos.Find(x => x.VideoID == request.VideoID);
-                request.EndPoint = Context.EndPointList.Find(x => x.EndPointID == request.EndPointID);
-              
-                Context.RequestDescriptionList.Add(request);
+                request.EndPoint = Context.EndPoints[request.EndPointID];
 
+                Context.Requests.Add(request.ID, request);
                 lineNumber++;
             }
         }

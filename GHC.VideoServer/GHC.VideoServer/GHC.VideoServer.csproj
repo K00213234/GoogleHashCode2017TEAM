@@ -44,7 +44,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Model\AddToCacheResult.cs" />
+    <Compile Include="Model\CacheProxy.cs" />
     <Compile Include="Model\CacheServer.cs" />
+    <Compile Include="Model\LatentCacheServer.cs" />
     <Compile Include="Model\Context.cs" />
     <Compile Include="Model\EndPoint.cs" />
     <Compile Include="Model\EndPointToCacheServerConnection.cs" />
@@ -57,6 +60,11 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Model\Video.cs" />
+    <Compile Include="Strategies\CostBased\CostBasedStrategy.cs" />
+    <Compile Include="Strategies\CostBased\PlugUnusedSpaceStrategy.cs" />
+    <Compile Include="Strategies\InfinitePrune\InfiniteCacheProxy.cs" />
+    <Compile Include="Strategies\InfinitePrune\InfiniteCachePruneCostBasedStrategy.cs" />
+    <Compile Include="Strategies\Utility.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -66,12 +74,16 @@
     <Content Include="kittens.in">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="Results.txt" />
     <Content Include="trending_today.in">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="videos_worth_spreading.in">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Strategies\Weighted\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
