@@ -2,18 +2,17 @@
 {
     public class LatentCacheServer
     {
-        private int _latencyInMilliseconds;
-        private CacheServer _cacheServer;
+        private readonly CacheServer _cacheServer;
         public LatentCacheServer(CacheServer cacheServer, int latencyInMilliSeconds)
         {
             _cacheServer = cacheServer;
-            _latencyInMilliseconds = latencyInMilliSeconds;
+            LatencyInMilliSeconds = latencyInMilliSeconds;
         }
-        public CacheServer Cache {get { return _cacheServer; } }
-        public int LatencyInMilliSeconds { get { return _latencyInMilliseconds; } }
-        public int ConsumedSpace { get { return _cacheServer.ConsumedSpace(); } }
+        public CacheServer Cache => _cacheServer;
+        public int LatencyInMilliSeconds { get; }
+        public int ConsumedSpace => _cacheServer.ConsumedSpace();
 
-        public int MaxMB { get { return _cacheServer.MaxMB; } }
+        public int MaxMb => _cacheServer.MaxMB;
 
         public int ID { get { return _cacheServer.ID; } }
 
@@ -23,12 +22,12 @@
             double videoSize = (double)request.Video.VideoSizeInMb;// / 1000;
             double latency = (double)LatencyInMilliSeconds;// / 1000;
 
-            return (numberOfRequests * videoSize) / latency;
+            return (numberOfRequests / videoSize) / latency;
         }
 
         public AddToCacheResult AddRequestToCache(RequestDescription request, double cachingScore)
         {
-            if (request.Video.VideoSizeInMb > (MaxMB - ConsumedSpace))
+            if (request.Video.VideoSizeInMb > (MaxMb - ConsumedSpace))
             {
                 return AddToCacheResult.NotEnoughFreeSpace;
             }
@@ -53,7 +52,6 @@
 
         public AddToCacheResult AddRequestToInfiniteCache(RequestDescription request, double cachingScore)
         {          
-
             if (Cache.VideoCache.ContainsKey(request.VideoID))
             {
                 Cache.VideoCache[request.VideoID].CacheScore += cachingScore;
@@ -64,8 +62,10 @@
                 {
                     Video = request.Video,
                     VideoID = request.VideoID,
-                    CacheScore = cachingScore
+                    CacheScore = cachingScore,
+                    OriginalRequest =  request
                 });
+                request.IsCached = true;
             }
 
             return AddToCacheResult.Added;

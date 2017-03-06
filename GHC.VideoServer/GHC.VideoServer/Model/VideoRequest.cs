@@ -7,5 +7,7 @@ namespace GHC.VideoServer.Model
 
         public double CacheScore { get; set;}
         public int RequestTotal { get; set; }
+
+        public RequestDescription OriginalRequest { get; set; }
     }
 }

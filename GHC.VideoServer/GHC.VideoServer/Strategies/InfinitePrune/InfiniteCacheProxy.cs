@@ -15,32 +15,36 @@ namespace GHC.VideoServer.Strategies.InfinitePrune
         public void AddRequest(RequestDescription request)
         {
             AddToAnyCache(request);
-            //bool isAlreadyInCache = false;
-            //for (int i = 0; i < _latentCaches.Count; i++)
-            //{   
-            //    var latentCache = _latentCaches[i];
-
-            //    if (latentCache.Cache.VideoCache.ContainsKey(request.VideoID))
-            //    {
-            //        latentCache.Cache.VideoCache[request.VideoID].CacheScore += latentCache.CalculateCachingScore(request);
-            //        isAlreadyInCache = true;
-            //    }
-            //}
-            //if (!isAlreadyInCache)
-            //{
-                
-            //}
         }
 
         private void AddToAnyCache(RequestDescription request)
         {            
+            var isInCache = false;
+
+            if (request.IsCached)
+            {
+                return;
+            }
+
+            foreach (var cacheServer in _latentCaches)
+            {
+                if (cacheServer.Cache.VideoCache.ContainsKey(request.VideoID))
+                {                                        
+                    request.IsCached = true;
+                    isInCache = true;
+                }
+            }
+
+            if (isInCache)
+                return;
+
             for (int i = 0; i < _latentCaches.Count; i++)
             {
                 var latentCache = _latentCaches[i];
                 var outcome = latentCache.AddRequestToInfiniteCache(request, latentCache.CalculateCachingScore(request));
                 if (outcome == AddToCacheResult.Added)
                 {
-                    //return; // no need to add to another cache
+                    return; // no need to add to another cache
                 }
             }           
         }       

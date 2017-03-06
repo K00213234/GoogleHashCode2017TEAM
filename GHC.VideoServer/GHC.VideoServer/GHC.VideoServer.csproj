@@ -63,7 +63,7 @@
     <Compile Include="Strategies\CostBased\CostBasedStrategy.cs" />
     <Compile Include="Strategies\CostBased\PlugUnusedSpaceStrategy.cs" />
     <Compile Include="Strategies\InfinitePrune\InfiniteCacheProxy.cs" />
-    <Compile Include="Strategies\InfinitePrune\InfinieCachePruneCostBasedStrategy.cs" />
+    <Compile Include="Strategies\InfinitePrune\InfiniteCachePruneCostBasedStrategy.cs" />
     <Compile Include="Strategies\Utility.cs" />
   </ItemGroup>
   <ItemGroup>

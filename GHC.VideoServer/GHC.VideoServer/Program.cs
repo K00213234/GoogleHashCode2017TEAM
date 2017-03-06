@@ -29,26 +29,36 @@ namespace GHC.VideoServer
             fileParser.Parse();
 
             var context = fileParser.Context;
+            context.RequestsToRedistribute  = new Dictionary<int, RequestDescription>();
+            context.UnOptimizedCacheServers = context.CacheServers;
 
-            //algorithm  
-            var costBasedStrategy = new CostBasedStrategy();
-           
-            //get the hight
-            //costBasedStrategy.Run(context);
+            
             var infiniteCachePruneCostBasedStrategy = new InfiniteCachePruneCostBasedStrategy();
             infiniteCachePruneCostBasedStrategy.Run(context);
-            //costBasedStrategy.Run(context);
-            //            costBasedStrategy.Run(context);
 
-            //infiniteCachePruneCostBasedStrategy.Run(context);
-            var smallerFileAccumulatorCostBasedReplacementStrategy = new PlugUnusedSpaceStrategy();
-            smallerFileAccumulatorCostBasedReplacementStrategy.Run(context);
+            var unCachedRequests = context.Requests.Where(req => !req.Value.IsCached).ToDictionary(req => req.Key, req => req.Value);
+
+            var emptyCacheServers  = context.CacheServers.Where(cacheServer => cacheServer.Value.ConsumedSpace() == 0).ToDictionary(cacheServer => cacheServer.Key, cacheServer => cacheServer.Value);
+
+            var ctx = new Context()
+            {
+                CacheServers = emptyCacheServers,
+                CacheServerToEndPoint =  context.CacheServerToEndPoint,
+                EndPointToCacheServer =  context.EndPointToCacheServer,
+                FileDescriptor = context.FileDescriptor,
+                Videos = context.Videos,
+                Requests = unCachedRequests
+            };
+
+            infiniteCachePruneCostBasedStrategy.Run(ctx);  //this should be repeated while there are cache servers with nothing cached
+
+            var plugUnusedSpaceStrategy = new PlugUnusedSpaceStrategy();
+            plugUnusedSpaceStrategy.Run(context);
 
             //output
             var s = new Solution { Context = context };
             var output = s.ToString();
-            CreateFile(output, filepath + ".out");
-            //Console.WriteLine("really done");
+            CreateFile(output, filepath + ".out");            
            
             var sum = 0.0;
             foreach(var cacheServer in context.CacheServers)
@@ -62,11 +72,10 @@ namespace GHC.VideoServer
             var totalVideoSize = context.Videos.Sum(x => x.VideoSizeInMb);
 
             Console.WriteLine($"storage: {totalStorageSpace} {storageConsumed} {totalVideoSize}");
-
             Console.WriteLine($"Total {sum} - {filename}");
         }
 
-        public static void CreateFile(String text, String filePath)
+        private static void CreateFile(string text, string filePath)
         {
             //
             //	Step 1A; Delete Existing File
@@ -78,14 +87,14 @@ namespace GHC.VideoServer
                 //
                 //	Step 1B; Create Directory
                 //
-                String directoryPath = Path.GetDirectoryName(filePath);
+                string directoryPath = Path.GetDirectoryName(filePath);
                 if (!Directory.Exists(directoryPath))
                     Directory.CreateDirectory(directoryPath);
             }
             //
             //	Step 2; Write File
             //
-            using (StreamWriter streamWriter = File.CreateText(filePath))
+            using (var streamWriter = File.CreateText(filePath))
             {
                 streamWriter.Write(text);
             }
